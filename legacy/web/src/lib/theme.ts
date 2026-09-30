@@ -1,0 +1,2 @@
+// Runs before first paint; no account/business data is read from browser storage.
+export const themeScript = `(function(){try{var t=localStorage.getItem('twx-theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}})();`;
