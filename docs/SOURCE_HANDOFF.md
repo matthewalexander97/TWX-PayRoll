@@ -22,3 +22,9 @@ Ordered immutable SQL migrations live in src-tauri/migrations; storage.rs embeds
 legacy/web is superseded and excluded from desktop builds. Do not run its scripts as verification. Narrow named commands are declared in build.rs, commands.rs, lib.rs and capabilities/main.json. No generic filesystem, shell, SQL or remote-origin grants belong in this app.
 
 Before committing manually, inspect staged files for credentials and generated data. This environment cannot write .git/index.lock; do not change permissions to bypass that restriction. Recommended commands are provided in the Phase 7 review. No commit/push is implied by build success.
+
+## Final release validation (0.2.0)
+
+The data-preserving NSIS template is src-tauri/installer/installer.nsi, derived from the pinned CLI's upstream template with provenance in the adjacent README. It removes both the app-data checkbox and deletion code. npm test checks the source policy; npm run build:installer checks the generated script after compilation; npm run handoff refuses a generated installer script that violates it. Retain this customization when updating Tauri. Runtime uninstall/reinstall acceptance is a separate required check.
+
+Current verification and artifact hashes are in RELEASE_VALIDATION.md. DESKTOP_PHASE_7_REVIEW.md retains historical candidate hashes; use the current SHA256SUMS.txt when validating the delivered files.

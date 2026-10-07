@@ -1,5 +1,7 @@
 # Desktop Phase 7 — release candidate review
 
+Historical implementation review: Phase 7 implementation is now accepted. The uninstall option and artifact hashes below describe the original candidate. See [final release validation](RELEASE_VALIDATION.md) for the corrected installer, current hashes and remaining acceptance gates.
+
 Date: 2026-10-07. Version 0.2.0, Windows x64. Implementation and available automated verification are complete. Release acceptance is **pending** the checks explicitly identified below. No subsequent phase, public publication, Git commit or push was performed.
 
 ## Requested acceptance report

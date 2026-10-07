@@ -47,7 +47,8 @@
       "nsis": {
         "installMode": "currentUser",
         "languages": ["English"],
-        "displayLanguageSelector": false
+        "displayLanguageSelector": false,
+        "template": "installer/installer.nsi"
       }
     }
   }

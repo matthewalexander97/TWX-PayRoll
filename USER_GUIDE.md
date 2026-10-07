@@ -128,4 +128,4 @@ Restore problem: leave all safety files and recovery markers intact, close/reope
 
 For application/storage problems, record the version and health details shown in Settings without sharing payroll files or credentials. If the window fails to open, check Microsoft Edge WebView2 Runtime in Windows installed apps. This installer includes an offline Evergreen runtime installer; enterprise policy or damaged runtime may still require Windows support.
 
-Reinstalling should preserve LocalAppData. Always make a validated backup before an upgrade or uninstall. Clean-machine installation, upgrade and uninstall/reinstall preservation must still be verified before this release candidate is accepted for real work.
+Ordinary uninstall removes the program and shortcuts while retaining the complete LocalAppData workspace. It offers no payroll-data deletion option. Reinstall under the same Windows account to reopen the preserved workspace. Always make a validated backup before an upgrade or uninstall. Clean-machine installation, upgrade and uninstall/reinstall preservation must still be verified before this release candidate is accepted for real work.

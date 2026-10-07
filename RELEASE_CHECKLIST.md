@@ -34,4 +34,8 @@ Unsigned artifacts may trigger Windows reputation warnings. Do not automate bypa
 
 Frontend verification passed (44 tests); native verification passed (68 tests); final production executable and NSIS installer built. Isolated native export preference/restart/reset/missing-folder, all four formats, Save As, collision, IPC denial, manual accessibility and backup/restore checks passed. These results do not check the independent-machine boxes above.
 
-Uninstall launch was blocked by the computer-use tool's product policy. Uninstall/reinstall remains unrun. The generated uninstaller offers an optional Delete app data checkbox; leave it unchecked to preserve the workspace. Final resource-complete installer reinstallation, physical read-only/disconnected-device exports and independent upgrade/recovery remain pending. Full evidence: docs/DESKTOP_PHASE_7_REVIEW.md.
+Uninstall launch was blocked by the computer-use tool's product policy. Uninstall/reinstall remains unrun. This was the original installer behavior. The final-validation correction removes both the checkbox and all app-data deletion code; runtime preservation remains unverified. Final resource-complete installer reinstallation, physical read-only/disconnected-device exports and independent upgrade/recovery remain pending. Full evidence: docs/DESKTOP_PHASE_7_REVIEW.md.
+
+## Final release validation correction
+
+Phase 7 implementation accepted; user reconfirmed no independent Windows environment. The corrected 0.2.0 uses a pinned custom NSIS template with no app-data deletion choice or code in any uninstall mode. Build-time assertions check source and generated script. This does not check the runtime uninstall/reinstall box. See docs/RELEASE_VALIDATION.md for current hashes and rerun results; earlier candidate hashes are historical.

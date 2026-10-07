@@ -8,6 +8,14 @@ import {
 import { createHash } from "node:crypto";
 import path from "node:path";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+execFileSync(
+  process.execPath,
+  ["scripts/verify-installer.mjs", "--generated"],
+  {
+    stdio: "inherit",
+  },
+);
 const config = JSON.parse(await readFile("src-tauri/tauri.conf.json", "utf8"));
 assert.equal(config.identifier, "com.twx.payroll");
 assert.equal(config.app.appDirectoriesOverride, undefined);
@@ -33,6 +41,7 @@ const files = [
   ["docs/SOURCE_HANDOFF.md", "SOURCE_HANDOFF.md"],
   ["docs/DEPENDENCIES.md", "DEPENDENCIES.md"],
   ["docs/DESKTOP_PHASE_7_REVIEW.md", "DESKTOP_PHASE_7_REVIEW.md"],
+  ["docs/RELEASE_VALIDATION.md", "RELEASE_VALIDATION.md"],
   ["src-tauri/assets/OFL-NotoSans.txt", "OFL-NotoSans.txt"],
 ];
 for (const file of await readdir("third-party/source"))

@@ -2,7 +2,7 @@
 
 ## Current authorization
 
-Desktop Phases 1–6 are accepted; live Google provider validation is pending. Phase 7 local Windows release candidate, export settings, offline User Manual and release validation are authorized. Read ARCHITECTURE.md, docs/PRODUCT_SPEC.md, docs/IMPLEMENTATION_PLAN.md, Phase 1–6 reviews, RECOVERY_GUIDE and INTEGRATIONS_GUIDE before changes. No routing/maps, unrelated business features, changed financial rules or public publication. Synthetic data only; native fixtures use an isolated test database. No independent Windows test environment is available; report that limitation. Prepare manual Git checkpoint commands without weakening .git security. Stop for review before another phase.
+Desktop Phases 1–7 implementation is accepted. Final release validation and release-specific defect corrections only are authorized for version 0.2.0; no new product features. Live Google provider validation remains pending. Read ARCHITECTURE.md, docs/PRODUCT_SPEC.md, docs/IMPLEMENTATION_PLAN.md, Phase 1–6 reviews, RECOVERY_GUIDE and INTEGRATIONS_GUIDE before changes. No routing/maps, unrelated business features, changed financial rules or public publication. Synthetic data only; native fixtures use an isolated test database. No independent Windows test environment is available; report that limitation. Prepare manual Git checkpoint commands without weakening .git security. Stop for review before another phase.
 
 The previously created web scaffold is superseded work, not the desktop foundation. It is isolated under legacy/web and excluded from all desktop builds. Do not run its scripts or count its tests as desktop verification. Historical web setup/review documents are labeled superseded.
 

@@ -1,6 +1,6 @@
 # TWX Payroll — desktop architecture
 
-Status: Desktop Phases 1–6 accepted; live Google provider validation remains pending. Phase 7 local Windows release candidate, export settings, offline User Manual and release validation are authorized. Routing/maps and public publication remain gated.
+Status: Desktop Phases 1–7 implementation accepted. Final release validation and release-specific corrections only; no independent Windows environment is available. Routing/maps and public publication remain gated.
 
 Current Phase 6 boundary: integrations are optional Rust output adapters. Historical phase-specific exclusions below describe those phases, not a ban on the expressly approved Phase 6 work. See INTEGRATIONS_GUIDE.md and DESKTOP_PHASE_6_REVIEW.md for current setup/verification.
 
@@ -119,3 +119,7 @@ Operation journal policy retains all entries, capped at 8 MB; SUCCESS/UNCERTAIN/
 The User Manual is bundled JSON rendered through simple React headings, local section links and paragraphs. USER_GUIDE.md is generated from that same content and checked in automated verification. No network/documentation service is involved. USER_GUIDE, DATA_RECOVERY, RELEASE_NOTES, RELEASE_CHECKLIST and SOURCE_HANDOFF describe the candidate and actual remaining validation gates. NSIS currentUser with offline WebView2 packaging was chosen for this known-user application; signing remains optional and the candidate is unsigned. No automatic updater/deployment is added.
 
 Acceptance: strict frontend/native suites, export settings persistence/collision/failure/independent-backup tests, manual keyboard/offline/theme/axe checks, production and installer builds, isolated native report/recovery checks. Separately record independent installed app identity/path, runtime-only prerequisites, upgrade and uninstall preservation when a separate environment exists. Do not claim those blocked checks passed. Stop for review after Phase 7.
+
+## Final release-validation correction
+
+Phase 7 implementation is accepted. Only release-specific corrections are authorized. The pinned custom NSIS template removes the app-data deletion control and its code, preserving the complete workspace during interactive/passive/silent uninstall. Tests inspect both the source and generated script. This is implementation evidence, not runtime uninstall acceptance. No independent Windows environment is available; docs/RELEASE_VALIDATION.md tracks pending gates and current candidate hashes.

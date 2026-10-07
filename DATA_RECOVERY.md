@@ -34,4 +34,4 @@ Reports (Excel, PDF, CSV and Word) are derived copies. They are useful for readi
 
 The release candidate still needs an independent installed-app recovery drill; see RELEASE_CHECKLIST.md for actual evidence rather than assuming this procedure has been certified on another machine.
 
-Uninstall preservation: leave the optional **Delete app data** checkbox unchecked. Default script behavior preserves LocalAppData; runtime uninstall/reinstall validation remains pending because automation was blocked by product policy. Keep a validated external backup before any manual acceptance drill.
+Uninstall preservation: the corrected 0.2.0 installer has no app-data deletion option or app-data deletion code. It retains the complete workspace. Older installers may still show Delete app data; leave that unchecked. Runtime uninstall/reinstall validation remains pending. Keep a validated external backup before any acceptance drill.

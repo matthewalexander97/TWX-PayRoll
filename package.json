@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src vite.config.ts",
-    "test": "vitest run && npm run test:foundation && npm run test:manual",
+    "test": "vitest run && npm run test:foundation && npm run test:manual && npm run test:installer",
     "test:foundation": "node scripts/verify-foundation.mjs",
     "test:ui": "node scripts/verify-ui.mjs",
     "format:check": "prettier --check src scripts/*.mjs vite.config.ts eslint.config.mjs package.json tsconfig.json index.html src-tauri/*.json src-tauri/capabilities/*.json",
@@ -16,8 +16,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "tauri": "tauri",
     "test:manual": "node scripts/manual-guide.mjs --check",
-    "build:installer": "tauri build --bundles nsis -- --locked",
-    "handoff": "node scripts/prepare-handoff.mjs"
+    "build:installer": "tauri build --bundles nsis -- --locked && node scripts/verify-installer.mjs --generated",
+    "handoff": "node scripts/prepare-handoff.mjs",
+    "test:installer": "node scripts/verify-installer.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.0",
