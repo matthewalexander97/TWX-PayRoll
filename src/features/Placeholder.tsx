@@ -35,8 +35,8 @@ export function Placeholder({ area }: { area: Area }) {
           <span className="card-kicker">READY FOR REVIEW</span>
           <h2>A focused foundation</h2>
           <p>
-            Navigation, appearance, and local settings. Financial rules remain
-            pending.
+            Navigation, appearance, and local settings. Payroll entry screens
+            will follow in a later phase.
           </p>
         </section>
       </div>

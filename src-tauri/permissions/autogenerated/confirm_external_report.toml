@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-confirm-external-report"
+description = "Enables the confirm_external_report command without any pre-configured scope."
+commands.allow = ["confirm_external_report"]
+
+[[permission]]
+identifier = "deny-confirm-external-report"
+description = "Denies the confirm_external_report command without any pre-configured scope."
+commands.deny = ["confirm_external_report"]

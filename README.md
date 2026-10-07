@@ -1,6 +1,6 @@
-# TWX Payroll desktop foundation
+# TWX Payroll desktop
 
-Desktop Phase 1 implementation only: Tauri 2, React, strict TypeScript, Tailwind, responsive placeholders and remembered local appearance. Native compiler/build checks and desktop runtime smoke tests pass; see docs/DESKTOP_NATIVE_ACCEPTANCE.md for evidence and limitations. No business tables, calculations, exports, recovery features, integrations, installer or deployment are implemented.
+Desktop Phases 1–5 are accepted. Phase 6 adds optional customer-owned Google Sheets/Gmail report outputs for review. Local bookkeeping, recovery and CSV/XLSX/PDF/DOCX/print remain usable offline. [Integration setup/lifecycle](docs/INTEGRATIONS_GUIDE.md), [Phase 6 review](docs/DESKTOP_PHASE_6_REVIEW.md). Synthetic data only pending business acceptance. Routing, installer/signing, distribution and deployment require separate approval.
 
 ## Development prerequisites
 
@@ -20,15 +20,15 @@ npm.cmd run verify:frontend
 pwsh -File scripts/verify-native.ps1
 ```
 
-Frontend verification runs strict TS, ESLint, five Vitest tests, foundation configuration/SQL checks, production Vite build, Edge/Playwright resizing/navigation/theme/keyboard and axe accessibility checks, and formatting checks. Edge must be installed for test:ui; screenshots go to outputs/desktop-phase-1. The SQL check uses Node's experimental SQLite module against an in-memory database; it does not substitute for Rust migration tests. Native verification runs cargo fmt/check/test/clippy and Tauri build --no-bundle. Also smoke-test the real app manually: restart theme persistence, stable resolved data location, single-instance focus, window resize/DPI, offline launch and restricted IPC. Native runtime checks have now run; see docs/DESKTOP_NATIVE_ACCEPTANCE.md for exact results and DPI coverage limits.
+Frontend verification runs strict TS, ESLint, Vitest tests, foundation configuration/SQL checks, production Vite build, Edge/Playwright resizing/navigation/theme/keyboard and axe accessibility checks, and formatting checks. Edge must be installed for test:ui; screenshots go to outputs/desktop-phase-1. The SQL check uses Node's experimental SQLite module against an in-memory database; it does not substitute for Rust migration tests. Native verification runs cargo fmt/check/test/clippy and Tauri build --no-bundle. Also smoke-test real native selection, backup history, deliberate restore, refreshed state and restart persistence. Historical Phase 1 runtime/DPI coverage is recorded in docs/DESKTOP_NATIVE_ACCEPTANCE.md.
 
 ## Structure
 
 - src/app: shell orchestration and tests
 - src/components: responsive navigation
-- src/features: shared placeholder and appearance/settings views
+- src/features: references, payroll, settlements, saved reports/local exports, optional external report actions and appearance/backup/integration settings
 - src/contracts: typed desktop IPC adapter, no generic SQL or files
-- src-tauri/src: startup, narrow commands, SQLite connection/settings
+- src-tauri/src: startup, narrow commands, SQLite connection/settings, exact domain, catalog/history repositories and financial application services
 - src-tauri/migrations: immutable embedded SQL migrations
 - src-tauri/capabilities: local main-window permissions only
 - scripts: frontend SQL/config/UI and native verification
@@ -37,12 +37,20 @@ Frontend verification runs strict TS, ESLint, five Vitest tests, foundation conf
 
 ## Local storage
 
-Stable application ID: com.twx.payroll. Rust resolves app.path().app_local_data_dir() and appends data/twx-payroll.sqlite3 (Windows LocalAppData); no hardcoded username or Documents/install path. Only app_settings exists: theme key, checked system/light/dark value, UTC updated_at timestamp, STRICT constraints. The frontend supplies no filesystem path or SQL. There is no localStorage business or theme persistence.
+Stable application ID: com.twx.payroll. Rust resolves app.path().app_local_data_dir() and appends data/twx-payroll.sqlite3 (Windows LocalAppData); no hardcoded username or Documents/install path. Schema version 4 has 16 tables, including backup_settings and backup_runs, and adds optional informational loads.mileage. Migrations 001–003 are unchanged. The frontend supplies no filesystem path or SQL. There is no localStorage business or theme persistence.
 
 One connection is serialized behind a Rust mutex; single-instance startup prevents a second ordinary app writer. Connections enable foreign keys, WAL, synchronous FULL, trusted_schema OFF and a five-second busy timeout. Extension loading is disabled by default and no API enables it. rusqlite bundles SQLite. rusqlite_migration embeds ordered SQL, manages transactional migrations and PRAGMA user_version; there is no hand-maintained metadata table. Unknown future schema versions fail before migrations; existing data is never silently reset. Applied SQL files must remain immutable; this runner has no applied-file checksum detection. Add new migrations instead.
 
-Three named commands exist: get_app_info, get_preferences, set_theme_preference. Rust validates themes as an enum and commits settings before reporting success. Capabilities authorize only those commands for local window main. No remote IPC, broad core permissions, filesystem, SQL plugin or shell permissions are granted. Production CSP permits bundled resources and Tauri IPC only; development adds the local Vite/HMR endpoint. Bundling/distribution is disabled.
+Thirty-one named commands exist: ten appearance/recovery, eleven business/history, three saved local reports and seven optional integration lifecycle/confirmation commands. Rust validates all privileged writes, exact financial inputs, expected versions and negative-final confirmation. Native Windows pickers own file/client selection; restore and external report sends use opaque one-use tokens and confirmation. Capabilities authorize only these commands for local window main. No remote IPC, broad core permissions, filesystem, SQL plugin, arbitrary network or shell permissions are granted. Production CSP permits bundled resources and Tauri IPC only; development adds the local Vite/HMR endpoint. Optional provider HTTPS is Rust-owned. Bundling/distribution is disabled.
 
 Appearance follows Windows by default, responds to OS changes in system mode, and remembers manual choices in SQLite. The shell waits for preference loading; failures show an error and disable settings writes. Failed theme saves preserve the previous preference. CSS uses local system fonts and no remote assets.
 
-Money/calculations must never use JavaScript floating-point Number. Business precision, rate terminology, rounding points and all financial rules remain unresolved. Backup/restore belongs to the next reviewed phase and must use SQLite-safe snapshots, never blind copies of an active WAL database. No later phase starts automatically.
+Financial rules use exact Rust i128 intermediates and INTEGER cents, tons_milli, completion_rate_scaled and payout_rate_ppm. PRODUCT_SPEC.md defines the provisional per-line and percentage half-up rounding policy. Financial IPC values are strings and the frontend only formats digit strings; Rust returns every calculated total. USD ($) is the approved display currency. Finalized edits and linked DRIVER payroll updates preserve before/after audits atomically; OWNER payroll is manual with no ACH field. Negative final payout requires explicit confirmation; there is no payment execution.
+
+The reproducible native business smoke script is scripts/verify-business-native.mjs. It refuses to write unless the running app uses the separate com.twx.payroll.phase4-smoke database. Its temporary Tauri/WebView2 diagnostic config and debugging port are used only during verification, under ignored work, and are absent from the ordinary build. See the Phase 4 review for initial/restart/resume commands and all 18 workflow results.
+
+Backups use SQLite Online Backup API, validated schema/integrity/foreign keys and SHA-256 completion manifests. Select a backup folder in Settings. Automatic backups evaluate at startup and every minute while open: changed business data is saved once the prior successful backup is 24 hours old, with hourly failure retries. Keep 10 automatic generations; manual and pre-restore copies are never automatically removed. Same-drive copies cannot protect against disk failure. Restore stages and validates the candidate, preserves a safety snapshot, serializes access and rolls back on validation failure. See docs/RECOVERY_GUIDE.md. No next phase starts automatically.
+
+## Phase 7 release candidate
+
+Version 0.2.0 adds export-folder settings, offline User Manual and per-user NSIS packaging with offline WebView2. See USER_GUIDE.md, DATA_RECOVERY.md, RELEASE_NOTES.md, RELEASE_CHECKLIST.md and docs/SOURCE_HANDOFF.md. Full commands: `npm run verify:frontend`, `pwsh -File scripts/verify-native.ps1`, `npm run build:installer`, `npm run handoff`. Schema/financial rules remain unchanged. Independent installed-PC acceptance is pending because no separate Windows test environment is available. No public release or Git commit/push is implied.

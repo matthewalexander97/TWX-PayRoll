@@ -1,6 +1,6 @@
 [package]
 name = "twx-payroll"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.98"
 
@@ -14,9 +14,25 @@ tauri-build = { version = "=2.7.0", features = [] }
 [dependencies]
 tauri = { version = "=2.12.0", features = [] }
 tauri-plugin-single-instance = "=2.5.1"
-rusqlite = { version = "=0.40.2", features = ["bundled"] }
+rusqlite = { version = "=0.40.2", features = ["bundled", "backup"] }
 rusqlite_migration = "=2.6.0"
 serde = { version = "=1.0.229", features = ["derive"] }
 
-[dev-dependencies]
+serde_json = "=1.0.151"
+
 tempfile = "=3.27.0"
+sha2 = "=0.10.9"
+uuid = { version = "=1.26.1", features = ["v4"] }
+csv = "=1.4.0"
+rust_xlsxwriter = "=0.99.1"
+docx-rs = { version = "=0.4.22", default-features = false }
+pdf-writer = "=0.15.0"
+ttf-parser = "=0.25.1"
+reqwest = { version = "=0.13.5", default-features = false, features = ["blocking", "json", "form", "native-tls"] }
+base64 = "=0.22.1"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "=0.62.2", features = ["Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_WindowsAndMessaging", "Win32_System_Com", "Win32_Foundation", "Win32_Security_Cryptography"] }
+
+[dev-dependencies]
+zip = { version = "=8.6.0", default-features = false, features = ["deflate"] }

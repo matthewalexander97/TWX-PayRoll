@@ -6,6 +6,7 @@ export const areas = [
   ["Trucks", "Directory"],
   ["Reports", "Reports"],
   ["Settings", "Preferences"],
+  ["User Manual", "Help"],
 ] as const;
 
 export type Area = (typeof areas)[number][0];
@@ -42,7 +43,7 @@ export function Navigation({
             }}
           >
             <span className="nav-symbol" aria-hidden="true">
-              {["▤", "▦", "◉", "◇", "▱", "▥", "⚙"][index]}
+              {["▤", "▦", "◉", "◇", "▱", "▥", "⚙", "?"][index]}
             </span>
             {label}
           </button>
@@ -50,7 +51,7 @@ export function Navigation({
       </nav>
       <div className="sidebar-foot">
         <span className="status-dot" /> Local workspace
-        <small>Desktop foundation · Phase 1</small>
+        <small>Payroll & settlements</small>
       </div>
     </aside>
   );

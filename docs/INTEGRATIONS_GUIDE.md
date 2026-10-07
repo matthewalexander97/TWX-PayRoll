@@ -1,0 +1,61 @@
+# Optional Google outputs
+
+Phase 6, October 6, 2026. SQLite remains authoritative. Local bookkeeping, recovery and CSV/XLSX/PDF/DOCX/print work without either connection. Google Sheets and Gmail receive deliberately confirmed report snapshots; they never synchronize business data back into TWX Payroll. No real development account is supplied or configured by this implementation.
+
+## Customer setup
+
+1. Use a Google Cloud project you own. Enable Google Sheets API for Sheets, Gmail API for email, or both. The email account must have Gmail service.
+2. Configure the Google Auth consent screen/audience and add dedicated test users while developing in Testing mode. Follow Google's publishing/verification requirements before external production use. Desktop credentials and sensitive scopes do not bypass those requirements.
+3. Create an OAuth client of type **Desktop app**, then download its client JSON. Do not use a web client, API key or service-account key. Do not put this file in Git, reports, SQLite settings or a backup folder. Treat the downloaded file as a credential; the app does not delete the customer's original file.
+4. In Settings → Optional integrations, choose Connect for the desired service. The native Windows picker reads the selected Desktop client file privately in Rust. The frontend never receives its path or contents. The app ignores endpoint URLs in the file and uses fixed Google endpoints.
+5. Complete Google authorization in your normal browser. Choose the customer/test account and grant the selected permission. The flow expires after three minutes; Cancel connection stops waiting. Closing/canceling the file picker does not change an existing connection.
+6. Repeat separately for the other service if desired. Settings displays the verified connected email identity and local configuration status. This is not a claim that an online permission check has just passed.
+
+The installed-app flow uses authorization code + PKCE S256, an unpredictable one-use state and a temporary listener bound only to **127.0.0.1 on an OS-assigned port**, with `/oauth/callback`. The listener is closed after callback, timeout or cancellation. This is the Google-supported HTTP loopback redirect exception; all requests leaving the machine use HTTPS. There is no hosted or persistent web server. See [Google desktop OAuth](https://developers.google.com/identity/protocols/oauth2/native-app).
+
+Separate requests use `openid email` for the verified account identity plus exactly one API scope:
+
+| Connection | API scope | Purpose |
+|---|---|---|
+| Google Sheets | `https://www.googleapis.com/auth/spreadsheets` | Create a new report spreadsheet |
+| Gmail email | `https://www.googleapis.com/auth/gmail.send` | Send a confirmed generated report attachment |
+
+No Drive scope, Gmail read/list scope or broad mail scope is requested. The Sheets scope itself authorizes spreadsheet access; TWX only implements new-spreadsheet creation. A customer project may still need Google's sensitive-scope review. The app does not widen scopes or request online access for bookkeeping. [Sheets create scopes](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/create), [Gmail scope reference](https://developers.google.com/workspace/gmail/api/auth/scopes).
+
+## Sending a report
+
+Save edits first. Reports, individual saved settlements and filtered Driver/Owner Payroll expose the same external actions as local report exports. Preparing reads a coherent canonical saved revision in Rust and releases SQLite before rendering or network work. Confirmations display report title, period, draft/finalized state and Google account. Email also displays recipient, subject and attachment name. Confirm sends that prepared revision even if another edit happens afterward. Confirmations expire after ten minutes and are one-use; Cancel sends nothing.
+
+**Sheets:** Confirm Create Sheet creates a new spreadsheet with one numbered tab per canonical section. Tabs include title, period, DRAFT/SAVED state, historical identities, saved quantities/totals, load rows and adjustments, with wrapped literal string cells and frozen headers. Money uses exact USD presentation, including negative values. There are no formulas or floating-point financial conversions. Owner sections have no ACH. All supported local report types can be sent, including the four required payroll/settlement types. Existing spreadsheets and unrelated content are never overwritten. A successful response returns a fixed Google spreadsheet URL for copying/opening yourself; no generic frontend browser-opening permission is granted. See [Sheets create](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/create).
+
+**Email:** Email Report generates the attachment from that same saved report model. PDF is the default; XLSX, DOCX and CSV are also available. Enter one plain ASCII mailbox address, a subject and optional message, then Review Email and Confirm Send Email. Syntax validation does not prove deliverability. Unicode subject/body use encoded MIME; filenames are sanitized and MIME header injection is rejected. Attachments are generated in memory, not selected arbitrary files or database attachments. There is no recent-recipient persistence, automatic send or outbox queue. A Gmail acceptance response is not proof of delivery. See [Gmail MIME sending](https://developers.google.com/workspace/gmail/api/guides/sending).
+
+Gmail was selected because it provides an HTTPS desktop output adapter using the same customer-owned OAuth infrastructure as Sheets, without a hosted backend, broad mail-read permission or provider SDK. `mailto:` has no reliable cross-client attachment workflow. Simple MAPI supports attachments but depends on an installed/configured compatible mail provider and profile; it is not a reliable common denominator for webmail/default Windows configurations. No assertion is made that every Windows mail client fails. [Microsoft Simple MAPI behavior](https://learn.microsoft.com/en-us/windows/win32/api/mapi/nc-mapi-mapisendmailw). Other email providers remain a later deliberate adapter decision.
+
+## Credential lifecycle and privacy
+
+The selected storage is **Windows current-user DPAPI**, with UI forbidden and without machine-wide protection. Only Desktop client ID/secret, refresh token and verified account identity are retained in encrypted blobs at app-local-data `integration-credentials/{sheets,email}.dpapi`. API access tokens live only in Rust memory for the current operation. Additional application/service entropy prevents accidentally using another application's or service's blob. Writes stage/sync encrypted bytes and replace atomically; no plaintext fallback exists. The OS-protected key is not bundled in the application. Same-Windows-account access remains the security boundary; this does not defend against malicious code running as that account. [Microsoft DPAPI](https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata).
+
+Every send refreshes the access token first, outside a financial transaction. Expired/revoked grants or malformed credentials produce an actionable reconnect error before a send. Failed account changes leave the previous stored credential in place; successful reconnect replaces it and invalidates prepared confirmations for that service. Credentials are not portable with SQLite backups; reconnect on a new Windows account/machine or after losing the vault.
+
+Disconnect/Clear credential removes the local encrypted blob first, clears prepared confirmations, then attempts Google's token revocation. Corrupt local credentials can still be cleared. Offline/revocation failure is reported honestly: remove the grant in Google Account → third-party connections/permissions. Google revocation can affect both grants for the same project/account; reconnect a remaining service if required. No refresh token is retained to queue a future revocation. No tokens, client secrets, authorization codes or full OAuth/provider responses are written to logs, financial audit JSON, recipient history or reports. A browser callback response contains only generic return-to-app text.
+
+## Network, retry and operational metadata
+
+Rust uses fixed OAuth/token/revoke/userinfo/Sheets-create/Gmail-send HTTPS endpoints, normal Windows certificate validation, no redirects and no automatic HTTP retries. Connection timeout is ten seconds; each HTTPS request has a thirty-second deadline and a bounded response body. There are no arbitrary frontend URL, SQL, filesystem, shell or file-byte parameters and no remote-origin IPC.
+
+Creation and sending are non-idempotent. A synced operation marker is published **before** making either request. The local `integration-operations.json` contains versioned operational IDs, timestamp, service, report kind, request digest, status and returned destination ID. It holds no report content, credentials, plaintext account or recipient addresses. A digest includes the prepared revision, destination/account and email details to identify an exact repeated action. It is not a financial record or an alternative business database.
+
+Successful and uncertain exact actions are blocked on a later preparation, including after app restart. An interrupted SENDING marker is treated as UNCERTAIN. Explicit provider rejection/rate limiting allows a new manually prepared action; nothing is automatically retried. Transport errors after issuing a request, server errors or missing success IDs are conservatively uncertain. Check Sheets or Sent Mail before taking a new action. If recording a provider result fails, the durable SENDING marker still blocks retry. There is no automatic duplicate-creation/send recovery or success fabrication.
+
+This metadata intentionally lives outside SQLite: report actions leave business, financial audit and backup-change tracking untouched, and restoring an older SQLite snapshot must not roll back knowledge of external side effects. It is not bundled into SQLite backups. If the app-data directory or operation journal is lost, exact duplicate protection cannot follow to a new machine; review Google destinations manually before resending. A corrupt/unavailable journal disables integrations, while local workflows remain usable. No automatic journal pruning or repeat-identical-send override is implemented; review that retention/reconciliation policy before distribution. Bounds are 100,000 Sheet cells, 8 MB Sheets request, 50,000 characters per cell, 18 MB generated email attachment and 8 MB operation journal. Use a narrower period or local exports on a size error.
+
+## Offline and acceptance boundary
+
+Startup makes no external request. Disconnected actions direct the user to Settings. Network/provider failures affect only the optional action; saved financial data, local exports and recovery remain available. Email requires Gmail/network and has no automatic offline queue.
+
+Automated tests use fake HTTP/credentials and synthetic saved records. The separate interactive Windows vault probe uses synthetic secrets, performs no network requests and removes its ciphertext. Actual customer Google authorization, live Sheets creation and real email delivery remain **pending dedicated test credentials and deliberate development authorization**. Do not enter eventual production credentials to satisfy a development smoke check. Installer, signing, distribution, routing/maps and cloud synchronization are outside Phase 6.
+
+## Phase 7 distribution policy
+
+Retain all operational entries, bounded by the existing 8 MB journal limit. No automatic pruning or repeat-identical override is approved. At capacity, fail new external sends and use local exports; preserve the journal. Verify Sheets/Sent Mail before taking any new action after an uncertain result. Do not delete the journal, reconnect just to evade deduplication, or change a message merely to force a repeat. No safe automatic reconciliation is claimed. A later explicitly reviewed reconciliation workflow may be added without weakening SUCCESS/UNCERTAIN protection. Dedicated live provider credentials remain unavailable, so optional provider validation is pending and does not block local workflows.

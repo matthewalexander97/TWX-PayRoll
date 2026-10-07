@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-preview-settlement"
+description = "Enables the preview_settlement command without any pre-configured scope."
+commands.allow = ["preview_settlement"]
+
+[[permission]]
+identifier = "deny-preview-settlement"
+description = "Denies the preview_settlement command without any pre-configured scope."
+commands.deny = ["preview_settlement"]

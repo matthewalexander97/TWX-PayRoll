@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-finalize-settlement-record"
+description = "Enables the finalize_settlement_record command without any pre-configured scope."
+commands.allow = ["finalize_settlement_record"]
+
+[[permission]]
+identifier = "deny-finalize-settlement-record"
+description = "Denies the finalize_settlement_record command without any pre-configured scope."
+commands.deny = ["finalize_settlement_record"]

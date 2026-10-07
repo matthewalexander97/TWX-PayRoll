@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-settlement-record"
+description = "Enables the save_settlement_record command without any pre-configured scope."
+commands.allow = ["save_settlement_record"]
+
+[[permission]]
+identifier = "deny-save-settlement-record"
+description = "Denies the save_settlement_record command without any pre-configured scope."
+commands.deny = ["save_settlement_record"]

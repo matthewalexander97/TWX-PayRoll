@@ -1,5 +1,7 @@
 # Desktop Phase 1 — native acceptance evidence
 
+> Historical evidence. Phase 1 was accepted October 3, 2026. Current Phase 2 rules and implementation results are in PRODUCT_SPEC.md and DESKTOP_PHASE_2_REVIEW.md.
+
 September 29, 2026. Frontend review is approved. Native compiler/build checks and the runtime smoke tests below now pass. Phase 1 is returned for review; Phase 2 has not begun.
 
 ## Prerequisites confirmed usable
@@ -78,3 +80,4 @@ Production executable: src-tauri/target/release/twx-payroll.exe, 10,484,224 byte
 No compiler, Rust test, Clippy, formatting, SQLite initialization/persistence, single-instance or IPC denial failure remains. Review the emulated-versus-physical DPI coverage above and stage/commit lockfiles when Git index access is available. No real driver/owner/company/payroll data was entered. Business rules and precision remain unresolved and untouched. No backups, exports, integrations or other Phase 2 features were added.
 
 STOP for review. Phase 2 has not begun.
+

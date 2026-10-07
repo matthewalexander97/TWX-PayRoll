@@ -1,101 +1,112 @@
 # TWX Payroll — desktop product specification
 
-Status: Desktop Phase 1 foundation is authorized and implemented for review. Native compiler/build checks and runtime smoke tests have passed; see docs/DESKTOP_NATIVE_ACCEPTANCE.md. No later phase is authorized. The earlier web scaffold is isolated under legacy/web.
+Status: Desktop Phases 1–6 accepted; live Google provider validation remains pending. Phase 7 local Windows release candidate, export settings, offline User Manual and release validation are authorized. Routing/maps and public publication remain gated.
 
-## Purpose and boundaries
+## Confirmed workflow
 
-One bookkeeper uses a normal installed Windows application to replace an Excel-based trucking workflow. SQLite stores payroll, drivers/owners/trucks, loads, weekly settlements, adjustments, references, and history. Ordinary work, existing records, local backups/recovery, and reports need no hosted backend/domain/subscription or developer account. Windows account access is the initial boundary; no app login is required.
+One bookkeeper operates a local Tauri/React/SQLite Windows application. No accounts, organizations, memberships, hosted backend, Supabase or RLS. Windows account access is the boundary.
 
-PC-first window resizing matters. Compact components may be reused later, but the initial database does not synchronize to another PC, phone, or tablet. Application PIN/auth/encryption, cloud sync, Sheets, email, and routing are separately scoped options.
+Completion Rate is the business's actual name for the rate applied to tons, not an hourly wage. Net Weight and Tons are one quantity; store only tons_milli. A load total is Tons × Completion Rate. Round each load to cents, sum those rounded totals, apply the driver's payout percentage, round driver gross to cents, then apply additions and deductions to get Final Settlement Payout. The percentage comes from a configurable driver type; no global 85% default. Snapshot the percentage actually selected when creating a settlement. A subsequent type/rate change cannot change existing records.
 
-## Views and fields
+Adjustment types and TWX codes are configurable. Direction is ADD or DEDUCT and amount_cents is nonnegative. Insurance, Hopper and Apportioned Plates are known deductions; Reimbursement is an addition. Percentage is not an adjustment type. No production seed codes or rates are inferred from example spreadsheets. Example codes 52520, 52540, 54520, 43000, 54200 and 55050 are examples only.
 
-| View | Behavior / components |
-|---|---|
-| TWX Payroll | Distinct Driver Payroll and Owner Payroll sections; PayrollEntryForm, PayrollTable/Cards, WeekFilter, AmountDisplay; save/edit/filter/prior-week history |
-| Weekly settlements | Date/driver/truck/status filters, saved settlement list, new/open draft |
-| Weekly Load / Settlement Detail | SettlementHeader, LoadEditor/Table/Cards, AdjustmentEditor, SettlementTotals, ActionBar, History/ConflictNotice |
-| Directory | Drivers, owners, trucks, TWX codes, plants/jobs, flexible adjustment labels; create/edit/archive |
-| Backup & recovery | Destination picker, manual/automatic backups, generations, last success/failure/overdue status, guided restore |
-| Settings/About | Theme, read-only data location, application/schema version, offline recovery help |
-| Reports (later) | Record/revision selection; local PDF/CSV/XLSX/DOCX, print, optional external actions |
+A truck has one owner; an owner can own multiple trucks. A truck has an optional default driver for entry convenience. Actual settlement/load driver and truck references are explicit and may differ from defaults. Owner, driver, truck, plant/job and code labels are snapshotted on selection, retained through finalization and preserved in audit history. Loads can identify an actual driver/truck independently of the settlement's payee; the header driver receives the settlement payout. The full UI must make this distinction visible.
 
-Payroll fields in both sections: Driver Name or Owner Name, TWX Code, ACH Charge, Truck #, Amount, Week Ending, Notes. Propose payee/truck/amount/week required; code/ACH/notes optional pending review. Database CHECK enforces exactly one driver/owner consistent with kind. NULL ACH is not zero and no net-pay rule is inferred. Multiple same-payee/week entries remain allowed until uniqueness is defined.
+User-selected inclusive period_start and period_end are real ISO calendar dates. End must be at least start. No weekday, length, overlap restriction or combined display-string storage. Display dates as MM/DD/YYYY – MM/DD/YYYY. No automatic external payment execution.
 
-Settlement header: inclusive week range, Driver ID, Truck ID. Store period_start/period_end separately as validated ISO TEXT dates, e.g. 2026-02-28 and 2026-03-06; display 02/28/2026 – 03/06/2026, never store that combined display string.
+## Exact financial policy: twx-fixed-v1-provisional
 
-Load fields: Load ID, BOL Number, PO Number, Plant, Job Name, Truck #, Driver Name, Net Weight, Tons, Mileage, rate field, Total. Completion Rate is supplied terminology, not yet verified; inspect paperwork for Completion Rate, Compensation Rate, Commission Rate, or Rate before implementing terminology or math.
-
-Adjustment rows: TWX Code | Explanation | Dollar Amount. Seed %, Insurance, Hopper, Reimbursement, Apportioned Plates as lookup rows. New types need no migration; labels imply neither sign nor formula. Drafts preserve entered amounts; final TOTAL remains pending until approved formula/manual-total policy.
-
-Action area evolves from Save to local Export/Print and separately optional Email. Omit/clearly disable unavailable actions; do not simulate success. Provide loading/empty/saved/error/conflict/draft/finalized states. Saved means SQLite transaction committed; disk/lock errors preserve input.
-
-## Resizing and theme
-
-Desktop tables/forms have clear typography/aligned amounts and two distinct payroll sections. Settlement layout: header → loads → adjustments → totals/actions. Narrow windows use labeled cards/stacked forms with every field accessible and no page-wide horizontal scrolling. Review 800×600 minimum, test 1024×768/1440×900 and Windows 125–200% scaling. 375px component testing is reuse work, not phone delivery.
-
-Keyboard/focus/labels/errors, WCAG AA contrast, status text independent of color, and practical 44px touch targets remain required. Default to Windows light/dark; manual preference persists in local nonfinancial settings and overrides system changes. Resolve theme before showing the window where practical; use safe fallback on settings failure. Print/PDF theme is independent.
-
-## History, ownership, and backup requirements
-
-Drafts editable with expected versions; finalized facts/labels/results/rule version remain frozen. Revision snapshots preserve literal TWX code/label, explanation, driver/owner names, truck number, plant/job labels, dates, units, currency/scale, inputs/totals. Catalog changes cannot rewrite statements. Proposed Correct record creates linked draft with reason/original retained; payment effects await approval. Internals stay largely invisible except History.
-
-Ship portable SQLite snapshots, schema/encoding documentation, compatible installer and offline recovery steps. Data recovery cannot require developer accounts. Excel import needs actual workbook review/mapping/duplicate and decimal/date reconciliation; it is not automatically included.
-
-Backup is required before a released app accepts real records: manual backup/full database export, ordinary destination folder selection, restore, automatic in-app schedule, generations, honest last success/failure/overdue display. Proposed cadence/retention for approval: daily when running/data changed; catch-up on next launch; seven daily/four weekly automatic generations; manual/pre-restore retained until deliberate deletion. Closed-app backup requires separately approved OS scheduling.
-
-Folders may be removable or already synced; no provider/API is required, and local completion does not prove remote upload. Keep live data in app-local storage. Validate backups; preserve last good generation; failures/interruptions must not destroy active data. Restore replaces, never merges/synchronizes. Clarify encryption/retention/destination/recovery requirements before release.
-
-## Unresolved rules and decisions
-
-| ID | Question | Safe proposal / gate |
+| Quantity | Storage | Exact scale / accepted range |
 |---|---|---|
-| Q1 | Actual rate label/meaning: completion/compensation/commission/rate; per ton/mile/load/percentage? | Provisional rate_decimal/unit; no computation |
-| Q2 | % explanation or calculation; base/sign/order/compounding/cap? | Category only |
-| Q3 | Exact load Total/settlement TOTAL formulas, signed adjustments, missing-value policy? | Entered values separate; final outputs pending |
-| Q4 | ACH deducted/included/added/informational; driver/owner differences? | Store independently |
-| Q5 | Driver/owner/truck cardinalities/history; row/header equality; dual driver/owner identity? | Independent reference entities; no generic payee or fixed assignment |
-| Q6 | Weight/ton units, conversion/authority/overrides? | Preserve both explicit inputs; no conversion |
-| Q7 | Week endings/start/inclusion/timezone, partial/overlapping periods? | Explicit saved start/end dates |
-| Q8 | Settlement → payroll relationship, split/aggregated payments? | No automatic linkage |
-| Q9 | Currency/minor-unit scale; input/intermediate/output precision; tie/negative rounding and every rounding point? | Exact storage proposal; require per-calculation approval |
-| Q10 | Manual totals allowed; required completeness/finalization gates? | Draft only until approved |
-| Q11 | Correction replacement/reversal/delta/next-week policy; rule version/report/payment effects? | Preserve originals, no inferred correction accounting |
-| Q12 | Identifier case/uniqueness, duplicate week entries, shared loads, revision numbering? | UUIDs internally; no invented global/week uniqueness |
-| Q13 | TWX meaning/shared catalog/required fields? | Reference IDs plus finalized code/label snapshots |
-| Q14 | Is OS-only protection sufficient; future PIN/encryption/multiple local users? | No app Auth/user/role tables initially |
-| Q15 | Report samples/volume/selection, customer email/Google/routing accounts, credential/attachment constraints? | Local report boundary; optional integrations |
-| Q16 | Backup destination/cadence/retention/encryption, closed-app scheduling, recovery expectations? | Proposed in-app schedule; explicit review needed |
-| Q17 | Windows/CPU/min window/DPI, WebView2 offline provisioning, signing/installer/update ownership? | Review desktop prerequisites/distribution |
-| Q18 | Which existing Excel records require import and reconciliation? | Review actual workbook/mapping first |
+| Net Weight / Tons | tons_milli INTEGER | 1,000 units per ton; 0 through i64::MAX scaled units; at most 3 decimal places |
+| Completion Rate | completion_rate_scaled INTEGER | 10,000 units per money unit per ton; 0 through i64::MAX; at most 4 decimal places |
+| Driver payout percentage | payout_rate_ppm INTEGER | 1,000,000 = 100%; 10,000 = 1%; 0 through 1,000,000 inclusive, supporting 4 decimal places in percentage notation |
+| Ordinary money | *_cents INTEGER | 100 cents per money unit; signed i64 outputs; nonnegative ACH and adjustment inputs |
 
-Schema decisions Q5–Q7/Q9/Q12/Q13 gate relevant business migrations. Relevant Q1–Q11/Q13 answers gate authoritative calculations. Q16 governs backups; Q17 desktop targets; Q18 import. Planning completion never authorizes implementation.
+These precision/rounding choices are explicitly provisional, authorized for Phase 2. USD display is confirmed for Phase 4. There is no currency conversion. Mileage has no approved calculation or fixed scale; Phase 4 stores optional exact informational decimal text.
 
-## Per-calculation approval records — pending
+Rust uses checked i128 multiplication/summing followed by explicit i64 range checks. Inputs are decimal strings or typed exact integers, never floating point. Decimal parsing rejects exponent notation, nonfinite text, whitespace, malformed values, overprecision and out-of-range inputs. Money and financial quantities must remain strings at any future IPC/JSON boundary.
 
-Do not assume rounding behavior. Define input/intermediate/output precision and every rounding point before implementing an approved calculation. Storage capacity, display formatting, and rounding policy are different.
+Load cents = half_up(tons_milli × completion_rate_scaled / 100,000). Each line is rounded separately. Gross route cents is the exact checked sum of those rounded cents. Driver gross cents = half_up(gross_route_cents × payout_rate_ppm / 1,000,000). Rounding is centralized in Rust; nearest integer with ties away from zero implements decimal half-up, including signed values. Adjustments and ACH already contain whole cents and have no further rounding. Final settlement = driver gross + ADD amounts − DEDUCT amounts. Negative final settlements are preserved as signed results; they are not clamped or interpreted as payment instructions. Aggregate outputs must fit i64 even when individual inputs do. The UI must review negative payouts before real use.
 
-| Calculation | Required details |
-|---|---|
-| Weight → Tons (if used) | Units/factor, authoritative input/override, precision and conversion rounding |
-| Rate → Load Total (if used) | Actual meaning/base/formula, precision, per-load versus retained intermediates |
-| Percentage adjustment (if used) | Base/sign/order, independent/compound, precision and rounding step |
-| ACH / payroll payable | Amount meaning, driver/owner treatment, scale, intermediate/final rounding |
-| Final settlement TOTAL | Included items/sign/order/missing-input policy, sum of rounded lines versus rounded sum |
-| Correction financial effect | Replacement/reversal/delta, rule version, rounding and report inclusion |
+## Payroll and history
 
-Each approval includes ID/version, exact formula, units/signs, precision/mode/rounding points, effective date, approver, and worked examples covering ties/zero/negatives where allowed plus divergent line-versus-total rounding.
+Distinct DRIVER and OWNER entries enforce driver XOR owner. DRIVER entries generated by a settlement keep a unique settlement_id. Amount equals that settlement's final payout; payroll total equals Amount + nonnegative ACH Charge. ACH defaults to explicit zero on generated entries, remains payroll-level, and is retained during settlement recalculation. OWNER entries have no ACH value (SQL NULL enforced), no driver settlement link, and a manually supplied nonnegative amount; total equals amount. No owner percentage formula is inferred.
 
-## Acceptance criteria
+Finalization and subsequent financial edits run as one immediate transaction: check expected row version, calculate, persist inputs/totals/snapshot, upsert the unique generated payroll row, append before/after audit events, and commit. Repeating finalization of an unchanged finalized version returns the same result with no duplicate payroll or audit entry. A finalized edit retains the same record identity and updates linked payroll; no manual revision workflow. The application supplies an event reason/category. No payment reversal/ledger semantics are implied.
 
-- Close/reopen offline and retrieve identical saved records/history from SQLite; no browser-only business storage.
-- Exact financial string/integer round-trip, checked overflow/precision, NULL distinct from zero, XOR payee CHECK, approved calculation examples.
-- Transactions/version conflicts never partly save/finalize; catalog/rule changes cannot alter old statements.
-- Restore a full validated backup on a clean offline installation without developer accounts; invalid/interrupted restore preserves original/rollback; status is honest.
-- Restricted IPC/path/remote access is denied; approved dialogs work without broad filesystem rights.
-- Windows resizing/DPI/keyboard/light/dark workflows work; input survives recoverable disk/lock errors.
-- Local reports/print reproduce saved exact values offline; optional API failures preserve manual operation.
+Catalog label snapshots are deliberate denormalization. A final snapshot includes every input, actual IDs, labels, totals, dates, code/explanation values, rule version and linked payroll identity/values where applicable. Normalized columns support queries; append-only before/after JSON preserves prior statements and edits. Financial integers in snapshots are strings. Audit is proportionate local history, not tamper-proof against direct file access. All production writes must pass Rust application services; React gets no arbitrary SQL or new Phase 2 commands.
 
-Tax filing, ACH payment execution, accounting ledger posting, routing optimization, and cloud sync are not specified MVP capabilities.
+## Views, appearance and later work
 
-Phase 1 selects no business quantity precision. The only persisted preference is theme (system/light/dark). Windows signing is a later distribution requirement; native development needs C++ Build Tools/Windows SDK and WebView2, not a signing certificate.
+The Phase 1 responsive shell remains: TWX Payroll, Weekly Settlements / Loads, Drivers, Owners, Trucks, Reports and Settings. Later payroll UI has Driver and Owner sections; only Driver shows ACH. Later settlement detail contains header, load rows, ADD/DEDUCT adjustment rows, totals, save/finalize and history. Do not build these workflows in Phase 2.
+
+Preserve desktop/tablet/compact reusable layout, keyboard/focus/labels, light/dark/system preference in SQLite, and no page-wide overflow. Planned reports read historical snapshots consistently and reproduce saved values; CSV/XLSX/PDF/DOCX/print precede separately approved Sheets/email adapters. Optional routing returns provider-neutral draft candidates; offline manual operation remains usable.
+
+## Remaining decisions
+
+- Confirm provisional rounding/scales against historical TWX statements and approve any versioned policy migration; never silently recalculate history after changing rules.
+- USD ($) display is confirmed. Before later payment/import workflows, confirm negative-settlement handling, minimum completeness requirements, duplicate/reference-code conventions and import reconciliation.
+- Confirm whether header/load driver or truck differences should receive warnings or additional constraints in the full UI; preserve actual identities now without enforcing permanent assignments.
+- Owner amounts remain manual; any future owner settlement-generation formula needs explicit approval.
+- Phase 3 implements the backup policy below. Encryption and any closed-app scheduling remain separately scoped. Review recovery evidence before real payroll entry.
+- Approve full UI, report samples, optional providers and Windows installer/signing/update ownership in their respective later phases.
+
+Previously pending rate terminology, ACH direction/scope, percentage meaning, quantity authority, formulas, explicit periods and simple audited finalized edits are now resolved above.
+
+
+## Phase 3 clarification and approved implementation policy
+
+Weekly settlement final payout automatically creates or updates the corresponding DRIVER payroll Amount. OWNER payroll remains manually entered. No owner-specific settlement-generation workflow exists unless future requirements explicitly authorize one.
+
+Manual and automatic backups use rusqlite SQLite Online Backup API, including committed WAL data. The live database stays in LocalAppData. Native Windows file/folder pickers supply Rust-owned selections; React never sends filesystem paths. Validate full known schema, TWX application identity, integrity and foreign keys; reject newer schemas. Older known Phase 1/2 databases are recognized by their exact schema and migrated only in a private staged copy. Original migrations stay immutable.
+
+A backup is staged in its chosen destination, validated, closed, SHA-256 hashed and published without overwriting existing files. A small adjacent completion manifest records identity/type/schema/size/hash, not business data. Record SUCCESS only after snapshot validation and publication. Failures retain truthful history; incomplete files are not completed generations. Timestamp plus random ID prevents name collisions.
+
+Automatic backup is enabled by default but requires a selected destination. Without one, Settings clearly states that backup protection has not been configured; no same-drive fallback is presented as external protection. Evaluate at startup and every 60 seconds while running. Back up when tracked business data changed and the latest successful backup is at least 24 hours old, or no successful baseline exists. Retry failures no more often than hourly. Theme/UI actions and backup-history writes do not cause excessive generations. Default retention is 10 successful automatic generations in the current destination; never auto-delete manual or pre-restore safety backups. Delete only matching TWX completion manifests/files whose identity, recorded path and checksum are verified.
+
+Restore is a two-step prepare/confirm operation: select and validate a backup, create/migrate an app-owned staged copy, display the selected name/date and replacement consequence, then require explicit confirmation with a one-use opaque token. Before altering live data, create and validate a retained pre-restore safety snapshot. A durable app-owned recovery marker is synced before restore. Serialize all database access and use SQLite Online Backup API to replace database contents transactionally, without raw-copying live files or combining WAL sidecars. Reopen and validate the restored database. Refresh React state after success.
+
+On post-restore failure, retain the candidate and roll back from the safety snapshot; if rollback cannot complete, block writes and preserve the marker/copies for restart recovery. Startup with a pending marker conservatively restores the verified safety snapshot before exposing storage. Never delete the only known-good copy. Restore preserves local destination/automatic settings and merges backup-operation history, while business records and appearance return to the selected snapshot. A safety copy on the same disk supports undo but does not protect against disk failure.
+
+Schema 3 adds backup_settings (one local policy/destination/change-generation row) and backup_runs (operation ID/time/type/path/status/schema/size/hash/validation/error metadata). Metadata JSON files are recovery/completion records, not alternate business storage. No provider API, arbitrary filesystem/SQL/shell permission, full payroll UI, installer or distribution is included. Synthetic data only until Phase 3 review accepts recovery.
+
+
+## Phase 4 approved UI boundary
+
+Reference lists/add/edit/archive, settlement creation/draft/finalization/finalized edits, separate DRIVER and manual OWNER payroll, period/driver/truck history filters and simple audit browsing are authorized. Typed named IPC uses decimal strings and expected versions; Rust supplies authoritative preview totals and invokes existing atomic application services. Driver Amount cannot be overwritten by the payroll command. Negative final payouts require explicit confirmation in both React and Rust. Currency display is USD ($), confirmed by the user on October 5, 2026; no conversion or financial policy change is introduced.
+
+Migration 004 adds nullable loads.mileage as exact nonnegative decimal TEXT. It is informational, excluded from all formulas and preserved in aggregate snapshots/audits. No fixed mileage scale, unit conversion or rounding is invented; the 128-character limit is an input-size bound, not decimal precision. Historical finalized snapshots/audit JSON remain unchanged by migration; later edits capture mileage with the rest of the aggregate. Migrations 001–003 stay immutable. Backup compatibility recognizes schema versions 1–4 and stages older known versions before restore.
+
+Native verification uses a temporary Tauri configuration with an isolated com.twx.payroll.phase4-smoke identifier and its own LocalAppData database. No synthetic business fixture is entered into the normal com.twx.payroll workspace. Diagnostic browser arguments/configuration stay under ignored work and are absent from the ordinary production build. Browser-only preview offers no fake business persistence. Phase 4 is accepted; its dated review remains historical evidence. Phase 5 is limited to local reports and print. Distribution remains gated.
+
+## Phase 5 saved local reports
+
+Reports offers Weekly Settlement Detail, Driver Payroll, Owner Payroll, Payroll Summary and Settlement History with saved period/driver/owner/truck selection. Settlement detail includes header identities/labels/ISO dates, loads including historical plant/job/driver/truck, exact tons/rates and optional mileage, saved load totals, gross route total, selected percentage, driver gross, every ADD/DEDUCT item and signed final payout. It also preserves linked Driver Payroll Amount, ACH and Total. Owner output has no ACH field. Payroll Summary contains separate driver/owner sections without introducing an aggregate financial formula.
+
+USD display is $1,234.56 and -$50.00. Canonical numeric IPC values remain exact integer strings. CSV uses undecorated exact decimals for numeric cells, with structural report/section/state metadata. XLSX percentages are numeric percentage points with an explicit percent display format, never implicit fractional reinterpretation. Large Excel values fall back to exact text. Historical unknown mileage is blank; missing draft final totals say Not finalized. A mixed draft history packet is conservatively marked DRAFT / NOT FINALIZED while each row retains its own status.
+
+Export uses saved data at invocation, including a coherent saved revision if another edit later occurs. Save edits before exporting. Preview/filter screens are read-only. Each format uses the same report model; exports never recalculate saved financial totals. Select a new filename in the Windows save picker; existing files cannot be overwritten. Print opens the stable local PDF representation for review and a subsequent viewer Print action. No printer job is automatically submitted. No Sheets/email/routing/online account/cloud upload is included.
+
+## Phase 6 optional Sheets and email
+
+Customer-owned Google Sheets and Gmail output connections are optional. Local payroll/settlements/history/recovery/reports work without configuration or Internet access. Sheets exports a new spreadsheet snapshot from the same saved canonical dataset, with no formulas, synchronization or overwrite of unrelated content. Email generates PDF (default), XLSX, DOCX or CSV attachments from the saved model and requires a reviewed recipient/subject/message and deliberate confirmation. Addresses are syntax-validated, not asserted deliverable, and are not saved as recent recipients.
+
+Rust owns HTTPS/OAuth/OS credential storage and all privileged actions. Separate selected-service scopes plus verified email identity, customer Desktop OAuth client JSON, PKCE/state and short-lived local callback are specified in INTEGRATIONS_GUIDE.md. Current-user DPAPI encrypted blobs are local, outside SQLite and ordinary backups. Google failures never alter financial totals/audit records, and no integration recreates financial formulas. A non-secret operational marker records attempts independently of financial history and conservatively blocks exact duplicates after success/uncertainty/restart. There is no automatic network retry or offline-send queue.
+
+No business-schema migration is introduced. Live provider acceptance requires dedicated explicitly configured test accounts; automated tests use synthetic records and fake transports. Confirm provider choice/setup and operational metadata retention before distribution. Routing/maps, Google Drive access, cloud synchronization, multi-user features and installer/signing/distribution are not included.
+
+
+## Phase 7 release candidate boundary
+
+The user explicitly authorizes per-user Windows packaging and local release validation, export-folder settings and an offline User Manual. Historical exclusions above remain evidence of earlier scopes. No routing/maps, new financial rules, cloud synchronization, real data or public publishing. Production identity remains com.twx.payroll; version 0.2.0; schema stays 4 with immutable migrations 001–004. An installed release still needs independent-machine upgrade/recovery/uninstall verification; this developer host cannot supply that evidence.
+
+Export Settings is Rust-owned machine-local configuration (export-directory.json), outside SQLite so restoring business data does not resurrect an obsolete machine path. Absence means the current OS/Tauri-resolved Documents directory. Only native selection can set a custom path. React accepts/display status and invokes named get/select/reset/open commands; it supplies no path. Ordinary export stages/syncs completed bytes and atomically publishes without clobbering, trying -2, -3 suffixes on collisions. Save As remains a distinct named command. Missing/unwritable destinations fail explicitly with no fallback; backup settings and financial/audit rows are untouched.
+
+Print cache cleanup is seven-day, app-owned UUID PDF files only, with Windows exclusive DELETE access and DELETE_ON_CLOSE to prevent a probe/delete race. Open/locked files remain. A serialized cache operation enforces a 100-file/100-MiB quota and refuses new previews when full; no potentially open file is forcibly removed. Ordinary exports remain available.
+
+Operation journal policy retains all entries, capped at 8 MB; SUCCESS/UNCERTAIN/SENDING digests are never automatically pruned or reset. At capacity new external actions fail before a provider send. Users verify Sheets/Sent Mail and use local exports; no uncertain operation automatically repeats and no reconciliation override is shipped. A lost journal/new PC requires remote review before new outputs.
+
+The User Manual is bundled JSON rendered through simple React headings, local section links and paragraphs. USER_GUIDE.md is generated from that same content and checked in automated verification. No network/documentation service is involved. USER_GUIDE, DATA_RECOVERY, RELEASE_NOTES, RELEASE_CHECKLIST and SOURCE_HANDOFF describe the candidate and actual remaining validation gates. NSIS currentUser with offline WebView2 packaging was chosen for this known-user application; signing remains optional and the candidate is unsigned. No automatic updater/deployment is added.
+
+Acceptance: strict frontend/native suites, export settings persistence/collision/failure/independent-backup tests, manual keyboard/offline/theme/axe checks, production and installer builds, isolated native report/recovery checks. Separately record independent installed app identity/path, runtime-only prerequisites, upgrade and uninstall preservation when a separate environment exists. Do not claim those blocked checks passed. Stop for review after Phase 7.

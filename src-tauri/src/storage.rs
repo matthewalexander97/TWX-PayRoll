@@ -6,8 +6,13 @@ use std::{
     time::Duration,
 };
 
-static MIGRATION_STEPS: [M<'static>; 1] = [M::up(include_str!("../migrations/001_settings.sql"))];
-static MIGRATIONS: Migrations<'static> = Migrations::from_slice(&MIGRATION_STEPS);
+static MIGRATION_STEPS: [M<'static>; 4] = [
+    M::up(include_str!("../migrations/001_settings.sql")),
+    M::up(include_str!("../migrations/002_business.sql")),
+    M::up(include_str!("../migrations/003_recovery.sql")),
+    M::up(include_str!("../migrations/004_mileage.sql")),
+];
+pub(crate) static MIGRATIONS: Migrations<'static> = Migrations::from_slice(&MIGRATION_STEPS);
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -39,17 +44,31 @@ pub struct AppInfo {
 }
 
 pub struct Storage {
-    connection: Connection,
-    path: PathBuf,
+    pub(crate) connection: Connection,
+    pub(crate) path: PathBuf,
+    pub(crate) app_data: PathBuf,
+    pub(crate) prepared_restore: Option<crate::backup::PreparedRestore>,
+    pub(crate) recovery_blocked: bool,
 }
 pub fn database_path(app_data: &Path) -> PathBuf {
     app_data.join("data").join("twx-payroll.sqlite3")
 }
 impl Storage {
-    pub fn open(app_data: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn business(&mut self) -> crate::application::BusinessService<'_> {
+        crate::application::BusinessService::new(&mut self.connection)
+    }
+    pub fn catalogs(&mut self) -> crate::repositories::CatalogRepository<'_> {
+        crate::repositories::CatalogRepository::new(&mut self.connection)
+    }
+    pub fn history(&self) -> crate::repositories::HistoryRepository<'_> {
+        crate::repositories::HistoryRepository::new(&self.connection)
+    }
+
+    pub fn open(app_data: &Path) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let path = database_path(app_data);
         let directory = path.parent().ok_or("Invalid application data directory")?;
         std::fs::create_dir_all(directory)?;
+        crate::backup::recover_pending(app_data, &path)?;
         let mut connection = Connection::open(&path)?;
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.pragma_update(None, "foreign_keys", true)?;
@@ -70,7 +89,14 @@ impl Storage {
         connection.pragma_update(None, "synchronous", "FULL")?;
         // Extension loading is disabled by SQLite by default; no extension API is exposed.
         MIGRATIONS.to_latest(&mut connection)?;
-        let storage = Self { connection, path };
+        let storage = Self {
+            connection,
+            path,
+            app_data: app_data.to_path_buf(),
+            prepared_restore: None,
+            recovery_blocked: false,
+        };
+        storage.connection.execute("UPDATE backup_runs SET status='INTERRUPTED',error_summary='Application stopped before completion' WHERE status='RUNNING'", [])?;
         storage.preferences()?; // Corrupt/invalid preferences fail startup rather than overwrite data.
         Ok(storage)
     }
@@ -120,12 +146,12 @@ mod tests {
         let mut storage = Storage::open(directory.path()).unwrap();
         assert_eq!(storage.preferences().unwrap().theme, Theme::System);
         storage.set_theme(Theme::Dark).unwrap();
-        assert_eq!(storage.info().unwrap().schema_version, 1);
+        assert_eq!(storage.info().unwrap().schema_version, 4);
         drop(storage);
         let storage = Storage::open(directory.path()).unwrap();
         assert_eq!(storage.preferences().unwrap().theme, Theme::Dark);
         let tables: i64 = storage.connection.query_row("SELECT count(*) FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'", [], |row| row.get(0)).unwrap();
-        assert_eq!(tables, 1);
+        assert_eq!(tables, 16);
         assert_eq!(
             storage
                 .connection

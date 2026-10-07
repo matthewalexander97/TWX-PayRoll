@@ -1,0 +1,131 @@
+# TWX Payroll — User Guide
+
+Bundled offline guide for release candidate 0.2.0. The in-app User Manual uses the same content.
+
+## Getting Started
+
+TWX Payroll keeps your bookkeeping on this Windows PC. Local records, reports and recovery work offline. Optional Google actions need an Internet connection and your own account.
+
+Install the supplied setup executable, then open TWX Payroll from the Start Menu. This release candidate is unsigned: verify its SHA-256 against the separately supplied release record before installation. An unexpected security warning is a reason to stop and verify the source.
+
+Use the left navigation, or the menu button in a narrow window. Settings offers Light, Dark and System appearance. System follows Windows. Your choice is saved when the desktop confirms it.
+
+The live database belongs under Windows LocalAppData in com.twx.payroll/data. Settings → Application & storage shows its actual location, application version, schema and SQLite version. Do not move the live database into Documents, a synced folder or the install directory. Exports and backups use separate destinations.
+
+## Initial Setup
+
+In Drivers, choose Driver Types and create the payout percentages you actually use. Create Drivers and select their type. Percentages are configurable; there is no universal 85% rate.
+
+Create Owners, then Trucks with an owner. An owner can have several trucks. A truck's optional default driver is an entry convenience, not a permanent assignment.
+
+Settings manages TWX Codes, Plants, Jobs and Adjustment Types. Enter your own approved codes and labels. A Job may belong to a Plant. An adjustment type supplies a suggested direction and optional code. Example buttons do not create production records automatically.
+
+Archive a reference you no longer use instead of trying to erase historical records. Existing statements retain saved names, truck numbers and code labels when you rename a reference.
+
+## Weekly Settlements
+
+Open Weekly Settlements / Loads and start a new settlement. Choose the driver who receives the payout, the truck, and the inclusive start and end dates. The period does not have to be a fixed seven-day week.
+
+Check the saved driver type and payout percentage. The percentage is captured for this settlement. Changing a driver's type later does not rewrite saved settlements.
+
+Add each load with its Load ID, BOL Number, PO Number, Plant and Job where known. Actual driver/truck on a load may differ from the header; the header driver receives this settlement's payout. Review those selections carefully.
+
+Net Weight / Tons is one tons quantity, with up to three decimal places. Mileage is optional information only and never changes money. Completion Rate is the money-per-ton rate, with up to four decimal places. The app calculates Load Total from Tons × Completion Rate.
+
+Save before closing or exporting. A draft preserves your inputs; only finalization records the final payout and linked Driver Payroll. Review all loads even when the app accepts an empty or zero-valued draft.
+
+## Driver Percentage
+
+The app rounds each load total to cents, then adds the load totals. It applies this settlement's selected driver payout percentage to that sum and rounds the result once to cents. Your driver's configured percentage may differ from another driver's percentage.
+
+The current rule is provisional: exact decimal arithmetic with half-cent ties rounded away from zero. Additions and deductions are already cents. Historical TWX examples were not supplied for business comparison; confirm the rule before relying on real payroll. Existing statements keep their saved totals and rule version.
+
+## Adjustments
+
+Add adjustment rows after loads. Select the adjustment type and review the direction, TWX Code, explanation and amount. ADD increases payout; DEDUCT decreases it. Enter a nonnegative amount with at most two decimal places; the direction supplies the sign.
+
+Insurance, Hopper and Apportioned Plates are deduction examples. Reimbursement is an addition example. Use your actual business definitions and codes. A percentage is not an adjustment row; the driver's payout percentage is handled separately.
+
+## Finalizing a Settlement
+
+A Draft is saved work in progress. Finalize saves the current draft and then records its final amounts. If finalization fails, the successfully saved draft remains available. Review Final Payout before confirming.
+
+Final Payout equals the driver's percentage result plus ADD rows minus DEDUCT rows. Finalization creates or updates one linked Driver Payroll Amount. A negative payout remains negative and requires explicit confirmation; the app does not turn it into zero or issue a payment.
+
+You can edit a finalized settlement. Saving recalculates its totals and updates linked Driver Payroll together, preserving that payroll's ACH Charge, notes and code. History keeps the previous and new versions. It is local accounting history, not a payment reversal or tamper-proof ledger.
+
+## TWX Payroll
+
+Driver Payroll Amount comes from the finalized settlement and cannot be manually replaced on the payroll screen. Enter the driver's nonnegative ACH Charge, Notes and TWX Code where applicable. Total equals Amount + ACH Charge; ACH is added, not deducted.
+
+Owner Payroll is separate. Choose the owner, truck and dates, then enter the owner's Amount manually. Owner entries have no ACH Charge and are not generated from a driver's settlement. Owner Total equals the manually entered Amount.
+
+Money is shown in US dollars. Saving checks the record version and preserves an audit entry. Payroll screens record bookkeeping; they do not send money or mark bank payments completed.
+
+## Historical Records
+
+Use period and driver/truck filters in Weekly Settlements and TWX Payroll to find previous records. Date filtering finds saved periods that overlap your selected range. Open a row to review its saved details and history.
+
+Historical statements keep the names, codes and labels used by the record. Renaming a Driver, Owner, Truck, Plant, Job or TWX Code does not rewrite an old statement. A supported financial edit keeps the same record identity and adds before/after history.
+
+If a stale-record message appears, another saved change has superseded the version you opened. Keep a note of your intended changes, reload deliberately, review the latest record and reapply only what is still appropriate.
+
+## Reports and Exports
+
+Reports offers Settlement Detail, Driver Payroll, Owner Payroll, Payroll Summary and Settlement History. Select the period and relevant driver/owner/truck or saved settlement, then review the preview. Individual settlements and payroll lists also offer report actions. Save edits first: exports always read saved records.
+
+Choose PDF, Excel (.xlsx), CSV or Word (.docx), then Export Saved Report. The normal export uses Settings → Export Settings → Default Export Folder. Initially this is Windows' resolved Documents folder, including any Windows-managed redirection.
+
+Change Folder opens a native folder picker. Reset to Documents returns to the current Windows Documents location. Open Export Folder shows that destination. Save As… chooses a one-off file without changing the preference. Existing files are never overwritten: normal exports add -2, -3 and so on; Save As asks you to choose a different filename on collision.
+
+A missing, disconnected or read-only folder causes an error, never a silent fallback. Reconnect the drive or change/reset the folder. Exports are derived documents, not backups, and cannot restore your workspace.
+
+Print / Preview PDF opens a local PDF; use the viewer's Print command yourself. PDF is the verified print format. Excel and Word package contents are tested, but visual Office pagination remains pending an installed Office environment. Draft reports clearly say they are not finalized.
+
+Print PDFs use a private cache beside the data folder. Files older than seven days are cleaned only when Windows grants exclusive delete access. Open files stay. The cache refuses new previews at 100 files or 100 MiB; close viewers and deliberately remove unneeded cache PDFs if asked. Export PDF remains available.
+
+## Backup and Recovery
+
+In Settings → Backup & recovery, choose a separate backup folder and select Backup Now. Wait for a validated SUCCESS entry. An external drive or already-synced folder can protect against PC failure; a local successful write does not prove cloud upload. Keep each .sqlite3 snapshot beside its .sqlite3.json manifest. Protect them: backups are not encrypted.
+
+Automatic backup starts only after you select a destination. While TWX is open it checks every minute and makes a baseline if needed, then backs up changed business data when the last successful backup is at least 24 hours old. Failed attempts wait at least an hour before retrying. It keeps ten successful automatic generations in the current destination; manual and pre-restore copies stay until you manage them.
+
+Restore Backup lets you select a snapshot and review it before explicit confirmation. Restoring replaces current business data and appearance. The app first creates a pre-restore safety snapshot, retains your current backup folder/automatic preference and checks the restored database. Reopen after interruption; do not delete recovery markers or WAL files.
+
+To undo a restore, use its PRE RESTORE safety snapshot listed in history. If storage cannot open, follow DATA_RECOVERY.md to preserve the entire closed workspace before guided recovery. Never copy an active database file or mix old WAL/SHM sidecars with a restored database. Exports are not substitutes for this backup process.
+
+## Google Sheets
+
+Google Sheets is optional and live provider validation remains pending. Configure your own Google project, Desktop OAuth client and account using INTEGRATIONS_GUIDE.md. Connect in Settings. No developer account is required for local bookkeeping.
+
+Send to Google Sheets prepares a saved report for review. Confirm Create Sheet creates a new spreadsheet snapshot, with no formulas or synchronization. Editing it does not change TWX Payroll. Check the connected account and period before confirming; Cancel sends nothing.
+
+If an action is uncertain, inspect your Google Sheets destination before taking any new action. The app blocks identical successful or uncertain requests, even after restart. Do not delete the operation journal or alter a message just to evade duplicate protection. Use a local export while the outcome is unresolved.
+
+## Email
+
+Optional email uses your own connected Gmail account. Email Report prepares a generated PDF attachment by default; Excel, Word and CSV are also available. Enter one recipient, subject and message, then review the account, recipient and attachment before Confirm Send Email.
+
+The app sends only after confirmation. Gmail acceptance does not prove receipt. Email delivery never changes payroll records. There is no automatic retry or offline send queue. On uncertain results, check Sent Mail and verify receipt before a new action; identical uncertain/successful actions remain blocked.
+
+Disconnect clears local protected credentials and attempts revocation. If offline, remove the grant in your Google Account when available. Optional connections can fail without preventing local work.
+
+## Moving to a New Computer
+
+On the old PC create a validated manual backup. Transfer that .sqlite3 snapshot and its adjacent manifest, the installer, hashes and guides to protected storage. Install a compatible TWX version on the replacement PC, then use Settings → Restore Backup and review your records and history.
+
+Choose the replacement PC's backup and export folders and make a fresh backup. Business records, snapshots, history and appearance come from SQLite. Export-folder preferences, print cache and operation journal are machine-local and are not ordinary database backups.
+
+Windows DPAPI-protected Google/Gmail credentials do not migrate with the database. Reconnect the accounts on the new PC. Before repeating any external report, inspect Sheets/Sent Mail: duplicate knowledge does not travel with a business backup. Keep the original backup until recovery is verified.
+
+## Troubleshooting
+
+Export folder unavailable: reconnect the drive, use Change Folder or Reset to Documents. The app does not redirect your report elsewhere. Backup folder unavailable: reconnect/select it and use Backup Now; check SUCCESS, not only the selected path.
+
+Stale record: reload and review before reapplying an edit. Google/Gmail disconnected: check Settings, account permissions and your customer-owned OAuth setup. Local exports still work. An uncertain send must be checked remotely before any further action.
+
+Restore problem: leave all safety files and recovery markers intact, close/reopen, and follow DATA_RECOVERY.md. Do not manually edit the database. A backup from a newer schema needs a compatible newer application.
+
+For application/storage problems, record the version and health details shown in Settings without sharing payroll files or credentials. If the window fails to open, check Microsoft Edge WebView2 Runtime in Windows installed apps. This installer includes an offline Evergreen runtime installer; enterprise policy or damaged runtime may still require Windows support.
+
+Reinstalling should preserve LocalAppData. Always make a validated backup before an upgrade or uninstall. Clean-machine installation, upgrade and uninstall/reinstall preservation must still be verified before this release candidate is accepted for real work.

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-settlement-records"
+description = "Enables the list_settlement_records command without any pre-configured scope."
+commands.allow = ["list_settlement_records"]
+
+[[permission]]
+identifier = "deny-list-settlement-records"
+description = "Denies the list_settlement_records command without any pre-configured scope."
+commands.deny = ["list_settlement_records"]

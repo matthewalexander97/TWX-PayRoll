@@ -1,9 +1,23 @@
 import { Navigation, areas, type Area } from "../components/Navigation";
 import { Settings } from "../features/settings/Settings";
-import { Placeholder } from "../features/Placeholder";
+import {
+  business,
+  emptyReferences,
+  errorOf,
+  type References,
+} from "../contracts/business";
+import { recovery } from "../contracts/desktop";
+import { ReferenceManager } from "../features/references/ReferenceManager";
+import { Settlements } from "../features/settlements/Settlements";
+import { Payroll } from "../features/payroll/Payroll";
+import { UserManual } from "../features/manual/UserManual";
+import { Reports } from "../features/reports/Reports";
 import { useEffect, useState } from "react";
 import { desktop, type AppInfo, type Theme } from "../contracts/desktop";
 export function App() {
+  const [references, setReferences] = useState<References>(emptyReferences);
+  const [backupConfigured, setBackupConfigured] = useState(true);
+  const [dataEpoch, setDataEpoch] = useState(0);
   const [area, setArea] = useState<Area>("TWX Payroll");
   const [menu, setMenu] = useState(false);
   const [theme, setTheme] = useState<Theme>("system");
@@ -11,6 +25,39 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  async function refreshReferences() {
+    setReferences(await business.references());
+  }
+  function businessChanged() {
+    void recovery
+      .status()
+      .then((s) => setBackupConfigured(!!s.destination && s.automaticEnabled))
+      .catch(() => {});
+  }
+  useEffect(() => {
+    if (!info) return;
+    let active = true;
+    void business
+      .references()
+      .then((r) => {
+        if (active) setReferences(r);
+      })
+      .catch((c) => {
+        if (active)
+          setError(
+            "Reference records could not be loaded: " + errorOf(c).message,
+          );
+      });
+    void recovery
+      .status()
+      .then((s) => {
+        if (active) setBackupConfigured(!!s.destination && s.automaticEnabled);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [info]);
   useEffect(() => {
     let active = true;
     async function load() {
@@ -98,7 +145,7 @@ export function App() {
             {areas.find(([label]) => label === area)?.[1]}{" "}
             <span className="breadcrumb">/ {area}</span>
           </span>
-          <span className="phase-tag">FOUNDATION PREVIEW</span>
+          <span className="phase-tag">LOCAL WORKSPACE</span>
         </header>
         <main id="main" tabIndex={-1}>
           <div className="page-heading">
@@ -108,7 +155,7 @@ export function App() {
               <p className="subtitle">
                 {area === "Settings"
                   ? "Make this workspace feel like yours."
-                  : "A clear workspace for the work ahead."}
+                  : "Manage pay periods, saved records and operations."}
               </p>
             </div>
             <span className="offline-badge">
@@ -126,20 +173,89 @@ export function App() {
               {error}
             </div>
           )}
-          {area === "Settings" ? (
-            <Settings
-              theme={theme}
-              info={info}
-              saving={saving}
-              disabled={saving || (desktop.available() && info === null)}
-              onChange={changeTheme}
+          {!backupConfigured && area !== "Settings" && (
+            <div className="notice">
+              Automatic backup protection is not configured. Choose a backup
+              folder and enable automatic backups in Settings. You can continue
+              entering synthetic test records.
+            </div>
+          )}
+          {area === "User Manual" ? (
+            <UserManual />
+          ) : area === "Settings" ? (
+            <>
+              <Settings
+                theme={theme}
+                info={info}
+                saving={saving}
+                disabled={saving || (desktop.available() && info === null)}
+                onChange={changeTheme}
+                onRestored={async () => {
+                  const [preferences, details] = await Promise.all([
+                    desktop.preferences(),
+                    desktop.info(),
+                  ]);
+                  setTheme(preferences.theme);
+                  setInfo(details);
+                  setError("");
+                  await refreshReferences();
+                  setDataEpoch((v) => v + 1);
+                }}
+              />
+              {info && (
+                <ReferenceManager
+                  refs={references}
+                  kinds={["twx_codes", "plants", "jobs", "adjustment_types"]}
+                  onChanged={refreshReferences}
+                />
+              )}
+            </>
+          ) : area === "TWX Payroll" ? (
+            <Payroll
+              key={dataEpoch}
+              refs={references}
+              enabled={info !== null}
+              onChanged={businessChanged}
             />
+          ) : area === "Weekly Settlements / Loads" ? (
+            <Settlements
+              key={dataEpoch}
+              refs={references}
+              enabled={info !== null}
+              onChanged={businessChanged}
+            />
+          ) : area === "Drivers" || area === "Owners" || area === "Trucks" ? (
+            info ? (
+              <ReferenceManager
+                key={area}
+                refs={references}
+                kinds={
+                  area === "Drivers"
+                    ? ["drivers", "driver_types"]
+                    : area === "Owners"
+                      ? ["owners"]
+                      : ["trucks"]
+                }
+                onChanged={refreshReferences}
+              />
+            ) : (
+              <div className="panel">
+                <p>
+                  Reference editing is available in the desktop application
+                  after storage opens.
+                </p>
+              </div>
+            )
           ) : (
-            <Placeholder area={area} />
+            <Reports
+              key={dataEpoch}
+              refs={references}
+              enabled={info !== null}
+            />
           )}
           <footer>
             TWX Payroll{" "}
-            <span>Desktop Phase 1 · No business records enabled</span>
+            <span>Payroll & settlements · Local SQLite workspace</span>
           </footer>
         </main>
       </div>

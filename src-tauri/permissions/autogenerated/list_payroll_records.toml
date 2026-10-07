@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-payroll-records"
+description = "Enables the list_payroll_records command without any pre-configured scope."
+commands.allow = ["list_payroll_records"]
+
+[[permission]]
+identifier = "deny-list-payroll-records"
+description = "Denies the list_payroll_records command without any pre-configured scope."
+commands.deny = ["list_payroll_records"]

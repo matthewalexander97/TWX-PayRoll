@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-driver-payroll"
+description = "Enables the save_driver_payroll command without any pre-configured scope."
+commands.allow = ["save_driver_payroll"]
+
+[[permission]]
+identifier = "deny-save-driver-payroll"
+description = "Denies the save_driver_payroll command without any pre-configured scope."
+commands.deny = ["save_driver_payroll"]

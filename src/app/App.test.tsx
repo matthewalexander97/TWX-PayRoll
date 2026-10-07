@@ -8,7 +8,40 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { desktop } from "../contracts/desktop";
+vi.mock("../contracts/exports", () => ({
+  exportSettings: {
+    status: vi.fn().mockResolvedValue({
+      directory: "Synthetic Documents",
+      usesDocuments: true,
+    }),
+  },
+}));
+vi.mock("../contracts/integrations", () => ({
+  integrations: { status: vi.fn().mockResolvedValue([]) },
+  integrationError: () => "Integration unavailable",
+}));
+vi.mock("../contracts/business", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../contracts/business")>();
+  return {
+    ...actual,
+    business: {
+      ...actual.business,
+      references: vi.fn().mockResolvedValue(actual.emptyReferences()),
+      payrolls: vi.fn().mockResolvedValue([]),
+    },
+  };
+});
 vi.mock("../contracts/desktop", () => ({
+  recovery: {
+    status: vi.fn().mockResolvedValue({
+      destination: null,
+      automaticEnabled: true,
+      retentionCount: 10,
+      notice: "Choose a backup folder",
+      lastSuccessfulBackup: null,
+      runs: [],
+    }),
+  },
   desktop: {
     available: vi.fn(),
     preferences: vi.fn(),

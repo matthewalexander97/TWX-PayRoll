@@ -1,3 +1,6 @@
+import { ExportSettings } from "./ExportSettings";
+import { BackupPanel } from "./BackupPanel";
+import { IntegrationSettings } from "./IntegrationSettings";
 import type { AppInfo, Theme } from "../../contracts/desktop";
 export function Settings({
   theme,
@@ -5,12 +8,14 @@ export function Settings({
   saving,
   disabled,
   onChange,
+  onRestored,
 }: {
   theme: Theme;
   info: AppInfo | null;
   saving: boolean;
   disabled: boolean;
   onChange: (theme: Theme) => Promise<void>;
+  onRestored: () => Promise<void>;
 }) {
   return (
     <>
@@ -70,6 +75,9 @@ export function Settings({
           </dd>
         </dl>
       </section>
+      <ExportSettings enabled={info !== null} />
+      <BackupPanel enabled={info !== null} onRestored={onRestored} />
+      <IntegrationSettings enabled={info !== null} />
     </>
   );
 }

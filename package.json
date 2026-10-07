@@ -1,20 +1,23 @@
 {
   "name": "twx-payroll-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src vite.config.ts",
-    "test": "vitest run && npm run test:foundation",
+    "test": "vitest run && npm run test:foundation && npm run test:manual",
     "test:foundation": "node scripts/verify-foundation.mjs",
     "test:ui": "node scripts/verify-ui.mjs",
     "format:check": "prettier --check src scripts/*.mjs vite.config.ts eslint.config.mjs package.json tsconfig.json index.html src-tauri/*.json src-tauri/capabilities/*.json",
     "verify:frontend": "npm run typecheck && npm run lint && npm test && npm run build && npm run test:ui && npm run format:check",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test:manual": "node scripts/manual-guide.mjs --check",
+    "build:installer": "tauri build --bundles nsis -- --locked",
+    "handoff": "node scripts/prepare-handoff.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.0",

@@ -28,6 +28,7 @@ try {
       "Owners",
       "Trucks",
       "Reports",
+      "User Manual",
       "TWX Payroll",
     ]) {
       if (width <= 720)
@@ -106,6 +107,43 @@ try {
       await page.screenshot({
         path: "outputs/desktop-phase-1/settings-compact.png",
       });
+    // Manual content is bundled: block all subsequent network access after startup.
+    await page.route("**/*", (route) => route.abort());
+    for (const theme of ["light", "dark"]) {
+      if (width <= 720)
+        await page.getByRole("button", { name: "Toggle navigation" }).click();
+      await page.getByRole("button", { name: "Settings", exact: true }).click();
+      await page.getByRole("button", { name: theme, exact: true }).click();
+      if (width <= 720)
+        await page.getByRole("button", { name: "Toggle navigation" }).click();
+      await page
+        .getByRole("button", { name: "User Manual", exact: true })
+        .click();
+      await page
+        .getByRole("link", { name: "Reports and Exports", exact: true })
+        .focus();
+      await page.keyboard.press("Enter");
+      await page
+        .getByRole("heading", { name: "Reports and Exports", exact: true })
+        .waitFor();
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+        true,
+        `Manual overflow ${width}`,
+      );
+      assert.deepEqual(
+        (
+          await new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+            .analyze()
+        ).violations.map((v) => v.id),
+        [],
+        `Manual ${theme} ${width}`,
+      );
+    }
+    await page.unroute("**/*");
     console.log(`PASS browser layout/navigation/theme ${width}x${height}`);
   }
 } finally {
