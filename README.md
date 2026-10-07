@@ -1,56 +1,255 @@
-# TWX Payroll desktop
+# TWX Payroll
 
-Desktop Phases 1–5 are accepted. Phase 6 adds optional customer-owned Google Sheets/Gmail report outputs for review. Local bookkeeping, recovery and CSV/XLSX/PDF/DOCX/print remain usable offline. [Integration setup/lifecycle](docs/INTEGRATIONS_GUIDE.md), [Phase 6 review](docs/DESKTOP_PHASE_6_REVIEW.md). Synthetic data only pending business acceptance. Routing, installer/signing, distribution and deployment require separate approval.
+A local-first Windows desktop bookkeeping and payroll application designed to replace an Excel-based trucking workflow.
 
-## Development prerequisites
+TWX Payroll brings drivers, driver types and payout percentages, owners, trucks, TWX codes, plants, jobs, loads, adjustments, weekly settlements, driver/owner payroll, historical records, reports and recovery into one local workspace.
 
-Use Node 24 LTS (verified 24.13.0), npm (verified 11.6.2), pinned Rust 1.98.1, Microsoft C++ Build Tools with Desktop development with C++ and Windows SDK, and WebView2. Rust is pinned in rust-toolchain.toml. A signing certificate is not needed for Phase 1. Customer-owned signing/release continuity and offline WebView2 provisioning remain distribution decisions.
+## Quick Start for the Bookkeeper
 
-```powershell
-npm.cmd ci
-npm.cmd run tauri -- dev
+**Install the Windows application. You do not need Node.js, npm, Rust, Cargo, Visual Studio, VS Code, Codex, or the source code.**
+
+### Download TWX Payroll
+
+1. Open the [TWX Payroll Releases](https://github.com/matthewalexander97/TWX-PayRoll/releases/latest) page.
+2. Under **Assets**, download the Windows installer: `TWX Payroll_0.2.0_x64-setup.exe`.
+3. Optionally download `SHA256SUMS.txt` and verify the installer checksum.
+4. Run the installer.
+5. The application is currently unsigned, so Windows SmartScreen may display a warning. If the installer came from this official repository and the checksum matches, review the file information and use the normal Windows option to continue.
+6. Open **TWX Payroll** from the Start Menu after installation.
+
+Never disable SmartScreen, antivirus, or Windows security policies to install TWX Payroll.
+
+## Windows Requirements
+
+- **Windows x64**; the current target is Windows 11 x64. Other Windows versions and architectures require separate validation.
+- **Microsoft Edge WebView2 Runtime**, used to display the desktop interface.
+
+The installer includes the Evergreen offline WebView2 installer and is configured to provision the Runtime when needed. Installation on an independent machine with WebView2 absent remains unverified. No hosted backend or online account is required for local bookkeeping.
+
+## First-Time Setup
+
+1. Open **Settings**.
+2. Choose **Light**, **Dark** or **System** appearance if desired.
+3. Configure a **backup folder** before relying on the app for real records.
+4. Confirm the **export folder**; it defaults to Windows **Documents**.
+5. In **Drivers**, create **Driver Types** with your approved payout percentages.
+6. Create **Drivers** and select their types.
+7. Create **Owners**.
+8. Create **Trucks** with their owners and optional default drivers.
+9. Add **TWX Codes**, **Plants**, **Jobs** and **Adjustment Types** in Settings as needed.
+10. Start a settlement in **Weekly Settlements / Loads**.
+
+Open the built-in **User Manual** for detailed instructions. It works offline; the same content is available in the [User Guide](USER_GUIDE.md).
+
+## How to Use TWX Payroll
+
+### Weekly Settlement
+
+Select the inclusive period start/end dates, driver and truck. Add load rows with **Tons / Net Weight** and **Completion Rate**, then enter any additions or deductions. Review the payout and **Save Draft** or **Finalize**.
+
+The workflow is:
+
+```text
+Load Total = Tons × Completion Rate
+Sum load totals → apply driver payout percentage → add/deduct adjustments
+→ Final Settlement Payout → linked Driver Payroll Amount
 ```
 
-Browser-only UI preview: npm.cmd run dev, then http://127.0.0.1:1420. This preview cannot access SQLite and explicitly states that theme changes last only for the session. It is not desktop runtime verification.
+Dates are selected explicitly; periods need not be exactly seven days. The driver percentage comes from the configured driver type. The current per-load and percentage rounding rule is provisional pending comparison with historical TWX statements; see the [User Guide](USER_GUIDE.md#driver-percentage).
 
-## Verification
+### TWX Payroll
 
-```powershell
-npm.cmd run verify:frontend
-pwsh -File scripts/verify-native.ps1
+- A finalized driver settlement automatically supplies the linked **Driver Payroll Amount**.
+- **ACH Charge is driver-only**. Driver Payroll **Total = Amount + ACH Charge**.
+- **Owner Payroll** amounts are entered manually; owners have no ACH Charge.
+- History filters retrieve saved periods. Finalized records can be edited through the application while retaining before/after audit history.
+
+The application records bookkeeping; it does not execute bank payments. Full settlement, adjustment and payroll instructions are in the [User Guide](USER_GUIDE.md).
+
+## Backups and Recovery
+
+**SQLite is the authoritative data store. Excel, PDF, CSV and DOCX exports are not backups.**
+
+In **Settings → Backup & recovery**, select a destination and use **Backup Now**. Wait for a validated **SUCCESS** entry. **Restore Backup** provides guided recovery with a pre-restore safety copy.
+
+The destination may be local, on an external drive, or inside an already-synchronized OneDrive, Google Drive or Dropbox folder. A backup on the same drive does not protect against drive failure; verify external copies or synchronization yourself. Keep each snapshot with its matching manifest. Backups are not encrypted.
+
+Keep the live SQLite database in its application-data directory. Do not move it into a synced folder or copy an active database manually. Configure backups before relying on real records and make a validated backup before upgrading or uninstalling.
+
+Follow [Data Recovery](DATA_RECOVERY.md) for restore, moving to another computer and preserving records after a failure.
+
+## Reports and Exports
+
+Export saved records as **PDF**, **Excel/XLSX**, **CSV** or **Word/DOCX**. **Print / Preview PDF** opens a local PDF for printing through your viewer. Save edits before generating a report.
+
+The default export destination is the current Windows user's resolved **Documents** folder. **Settings → Export Settings** provides **Change Folder**, **Reset to Documents** and **Open Export Folder**. **Save As…** selects a one-off destination without changing the default.
+
+Normal exports add numbered suffixes when a filename already exists. Unavailable destinations produce an error without silent fallback. Exports are readable copies of saved records and cannot restore the database.
+
+## User Manual
+
+The application includes an **offline User Manual** covering setup, settlements, payroll, adjustments, reports, exports, backups and troubleshooting. Open it from the main navigation or read [USER_GUIDE.md](USER_GUIDE.md).
+
+## Optional Integrations
+
+Google Sheets and Gmail outputs require your own Google configuration and account. **Live provider validation remains pending.** These integrations are optional; bookkeeping, local reports and recovery work offline without them.
+
+Sheets creates a separate report snapshot; Gmail sends a generated attachment after your confirmation. See [Integration Setup and Recovery](docs/INTEGRATIONS_GUIDE.md).
+
+## Data Ownership and Privacy
+
+Business/payroll records are stored locally, conceptually under `%LOCALAPPDATA%\com.twx.payroll\`. **Settings → Application & storage** shows the actual database path. Ordinary uninstall is designed to retain the complete application-data workspace and has no payroll-data deletion option; runtime uninstall/reinstall preservation remains pending validation.
+
+Business data stays local unless you deliberately export or send it. You control backup/export destinations, including whether those folders are synchronized by other software. Optional Google credentials are protected separately from the business database. There is no required hosted backend. Use the app's supported editing and recovery controls rather than manually editing SQLite files.
+
+## Technical Overview
+
+**Tauri 2 · React · strict TypeScript · Tailwind CSS · Rust · SQLite · WebView2**
+
+The application combines a responsive light/dark/system interface with Rust-owned validation, financial logic and transactions. Architectural priorities include:
+
+- Exact fixed-point calculations and historical financial snapshots.
+- SQLite-safe backups, validated restore and rollback protection.
+- Audit history for finalized edits and linked payroll updates.
+- Narrowly scoped Tauri commands and permissions.
+- One saved report dataset for local formats and optional Google outputs.
+- Local operation without a required server or online login.
+
+```mermaid
+flowchart TD
+    B[Bookkeeper] --> UI[React / TypeScript UI]
+    UI --> IPC[Typed Tauri Commands]
+    IPC --> R[Rust Application + Financial Domain]
+    R --> DB[(SQLite)]
+    R --> Reports[Local Reports]
+    R --> Recovery[Backup / Restore]
+    R --> Google[Optional Sheets / Gmail]
 ```
 
-Frontend verification runs strict TS, ESLint, Vitest tests, foundation configuration/SQL checks, production Vite build, Edge/Playwright resizing/navigation/theme/keyboard and axe accessibility checks, and formatting checks. Edge must be installed for test:ui; screenshots go to outputs/desktop-phase-1. The SQL check uses Node's experimental SQLite module against an in-memory database; it does not substitute for Rust migration tests. Native verification runs cargo fmt/check/test/clippy and Tauri build --no-bundle. Also smoke-test real native selection, backup history, deliberate restore, refreshed state and restart persistence. Historical Phase 1 runtime/DPI coverage is recorded in docs/DESKTOP_NATIVE_ACCEPTANCE.md.
+Money is stored as integer cents; tons, rates and percentages use exact fixed-point representations. Rust performs authoritative arithmetic with checked integer intermediates. JavaScript floating point does not calculate authoritative financial values. Finalized records preserve historical values and labels; supported edits retain audit history.
 
-## Structure
+See [Architecture](ARCHITECTURE.md), [Product Specification](docs/PRODUCT_SPEC.md) and [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) for design decisions and scope.
 
-- src/app: shell orchestration and tests
-- src/components: responsive navigation
-- src/features: references, payroll, settlements, saved reports/local exports, optional external report actions and appearance/backup/integration settings
-- src/contracts: typed desktop IPC adapter, no generic SQL or files
-- src-tauri/src: startup, narrow commands, SQLite connection/settings, exact domain, catalog/history repositories and financial application services
-- src-tauri/migrations: immutable embedded SQL migrations
-- src-tauri/capabilities: local main-window permissions only
-- scripts: frontend SQL/config/UI and native verification
-- docs: architecture, requirements, phase gates and verification report
-- legacy/web: isolated historical Next.js/Supabase scaffold; excluded from Vite/TypeScript/Tailwind and desktop dependency graph
+### Repository Structure
 
-## Local storage
+```text
+src/                    React UI, typed IPC contracts and frontend tests
+src-tauri/              Rust services, desktop configuration and permissions
+src-tauri/migrations/   Immutable, ordered SQLite migrations
+src-tauri/installer/    Data-preserving NSIS template and provenance
+docs/                   Requirements, reviews and operating/build guidance
+scripts/                Verification and release/handoff tooling
+third-party/            Dependency notices and corresponding source material
+legacy/web/             Superseded web scaffold; excluded from desktop builds
+```
 
-Stable application ID: com.twx.payroll. Rust resolves app.path().app_local_data_dir() and appends data/twx-payroll.sqlite3 (Windows LocalAppData); no hardcoded username or Documents/install path. Schema version 4 has 16 tables, including backup_settings and backup_runs, and adds optional informational loads.mileage. Migrations 001–003 are unchanged. The frontend supplies no filesystem path or SQL. There is no localStorage business or theme persistence.
+### Screenshots
 
-One connection is serialized behind a Rust mutex; single-instance startup prevents a second ordinary app writer. Connections enable foreign keys, WAL, synchronous FULL, trusted_schema OFF and a five-second busy timeout. Extension loading is disabled by default and no API enables it. rusqlite bundles SQLite. rusqlite_migration embeds ordered SQL, manages transactional migrations and PRAGMA user_version; there is no hand-maintained metadata table. Unknown future schema versions fail before migrations; existing data is never silently reset. Applied SQL files must remain immutable; this runner has no applied-file checksum detection. Add new migrations instead.
+Repository screenshots are not included yet. Published examples should use synthetic/demo data only.
 
-Thirty-one named commands exist: ten appearance/recovery, eleven business/history, three saved local reports and seven optional integration lifecycle/confirmation commands. Rust validates all privileged writes, exact financial inputs, expected versions and negative-final confirmation. Native Windows pickers own file/client selection; restore and external report sends use opaque one-use tokens and confirmation. Capabilities authorize only these commands for local window main. No remote IPC, broad core permissions, filesystem, SQL plugin, arbitrary network or shell permissions are granted. Production CSP permits bundled resources and Tauri IPC only; development adds the local Vite/HMR endpoint. Optional provider HTTPS is Rust-owned. Bundling/distribution is disabled.
+## Development
 
-Appearance follows Windows by default, responds to OS changes in system mode, and remembers manual choices in SQLite. The shell waits for preference loading; failures show an error and disable settings writes. Failed theme saves preserve the previous preference. CSS uses local system fonts and no remote assets.
+These prerequisites are for maintainers building from source; installed-app users do not need them.
 
-Financial rules use exact Rust i128 intermediates and INTEGER cents, tons_milli, completion_rate_scaled and payout_rate_ppm. PRODUCT_SPEC.md defines the provisional per-line and percentage half-up rounding policy. Financial IPC values are strings and the frontend only formats digit strings; Rust returns every calculated total. USD ($) is the approved display currency. Finalized edits and linked DRIVER payroll updates preserve before/after audits atomically; OWNER payroll is manual with no ACH field. Negative final payout requires explicit confirmation; there is no payment execution.
+| Prerequisite    | Documented development environment                                                       |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Node.js / npm   | Node 24.13.0 / npm 11.6.2; a supported compatible Node 24 release may be used            |
+| Rust / Cargo    | 1.98.1, pinned by `rust-toolchain.toml`, with rustfmt/clippy and the Windows MSVC target |
+| Native compiler | Microsoft C++ Build Tools with **Desktop development with C++**                          |
+| Windows SDK     | A supported SDK installed with the native build tools                                    |
+| Desktop runtime | Microsoft Edge WebView2 Runtime                                                          |
+| Verification    | Microsoft Edge for browser UI/accessibility tests; PowerShell 7 for the native script    |
 
-The reproducible native business smoke script is scripts/verify-business-native.mjs. It refuses to write unless the running app uses the separate com.twx.payroll.phase4-smoke database. Its temporary Tauri/WebView2 diagnostic config and debugging port are used only during verification, under ignored work, and are absent from the ordinary build. See the Phase 4 review for initial/restart/resume commands and all 18 workflow results.
+Run commands in PowerShell from the repository root:
 
-Backups use SQLite Online Backup API, validated schema/integrity/foreign keys and SHA-256 completion manifests. Select a backup folder in Settings. Automatic backups evaluate at startup and every minute while open: changed business data is saved once the prior successful backup is 24 hours old, with hourly failure retries. Keep 10 automatic generations; manual and pre-restore copies are never automatically removed. Same-drive copies cannot protect against disk failure. Restore stages and validates the candidate, preserves a safety snapshot, serializes access and rolls back on validation failure. See docs/RECOVERY_GUIDE.md. No next phase starts automatically.
+```powershell
+npm ci
+npm run tauri -- dev
+```
 
-## Phase 7 release candidate
+For frontend-only development:
 
-Version 0.2.0 adds export-folder settings, offline User Manual and per-user NSIS packaging with offline WebView2. See USER_GUIDE.md, DATA_RECOVERY.md, RELEASE_NOTES.md, RELEASE_CHECKLIST.md and docs/SOURCE_HANDOFF.md. Full commands: `npm run verify:frontend`, `pwsh -File scripts/verify-native.ps1`, `npm run build:installer`, `npm run handoff`. Schema/financial rules remain unchanged. Independent installed-PC acceptance is pending because no separate Windows test environment is available. No public release or Git commit/push is implied.
+```powershell
+npm run dev
+```
+
+Open `http://127.0.0.1:1420`. Browser preview does not provide desktop SQLite persistence or privileged commands.
+
+### Checks and Builds
+
+```powershell
+# Frontend checks
+npm run typecheck
+npm run lint
+npm test
+npm run test:ui
+npm run format:check
+
+# Rust checks
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo check --manifest-path src-tauri/Cargo.toml --locked
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+
+# Production builds and handoff
+npm run build
+npm run tauri -- build --no-bundle -- --locked
+npm run build:installer
+npm run handoff
+```
+
+The aggregate checks are `npm run verify:frontend` and `pwsh -NoProfile -File scripts/verify-native.ps1`. The native script runs formatting, check, tests, strict Clippy and the production desktop build. Both JavaScript and Rust lockfiles are included for reproducibility.
+
+See [Source Handoff](docs/SOURCE_HANDOFF.md) for build prerequisites and maintenance, and [Dependency Versions](docs/DEPENDENCIES.md) for the pinned stack. The first installer build acquires NSIS tooling and Microsoft's offline WebView2 installer.
+
+## Testing
+
+The [latest release validation](docs/RELEASE_VALIDATION.md) records **44 frontend tests and 68 Rust tests passing**, alongside type checking, lint, formatting, accessibility checks, production builds and NSIS compilation.
+
+Coverage includes exact financial calculations, migrations, persistence, backup/recovery, historical reports, export settings, integration boundaries and UI behavior. Synthetic native fixtures use isolated test databases. Automated and developer-host tests do not establish independent-machine or live Google acceptance.
+
+## Release Status
+
+**0.2.0 is a prepared release candidate. Phases 1–7 implementation are accepted; final release acceptance remains pending.**
+
+The local handoff is generated under `outputs/release/0.2.0` with the installer, supporting guides and `SHA256SUMS.txt`. This directory is ignored by Git; local build outputs are not automatically published GitHub Release assets.
+
+Implemented and tested: core payroll/settlement workflows, local persistence, backup/recovery, local exports, export settings, offline manual, installer builds and automated verification.
+
+Pending release validation:
+
+- Independent clean-machine installation, physical data path and operation without development tools.
+- WebView2 provisioning on a machine without the Runtime.
+- Independent upgrade, uninstall/reinstall preservation and recovery workflows.
+- Physical unavailable/removable-drive and Windows ACL read-only export tests.
+- Excel/Word visual review.
+- Representative historical TWX rounding comparison.
+- Optional live Google Sheets/Gmail provider validation.
+
+These are outstanding acceptance checks, not evidence of known core application failures. No independent Windows test environment is currently available. Use synthetic data until the applicable release/business checks are accepted. Follow the [Release Checklist](RELEASE_CHECKLIST.md); [Release Notes](RELEASE_NOTES.md) and [current validation report](docs/RELEASE_VALIDATION.md) distinguish the corrected installer from earlier candidates.
+
+## GitHub Releases — Maintainers
+
+This is the intended distribution process after release review and acceptance. Publishing is a separate action; clients should receive an installer and guides rather than clone/build the source.
+
+1. Run the aggregate verification, build the installer with `npm run build:installer`, then generate the allowlisted package with `npm run handoff`.
+2. Verify **every file** against the generated `SHA256SUMS.txt`.
+3. Create a GitHub Release tagged with the approved version.
+4. Attach the Windows installer and checksum file. Include user-facing guides and release notes as appropriate; retain required dependency notices/corresponding sources in the delivery.
+5. Publish the installer SHA-256 in the release notes. Hashes belong with the exact release assets, so this README does not duplicate a candidate hash that could become stale.
+6. Exclude databases, credentials, synthetic fixtures, debug builds, development caches and private reports.
+
+For the current 0.2.0 package, verify all manifest entries in PowerShell:
+
+```powershell
+$releaseFolder = "outputs/release/0.2.0"
+foreach ($line in Get-Content "$releaseFolder/SHA256SUMS.txt") {
+    $expectedHash, $relativeName = $line -split '  ', 2
+    $actualHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $releaseFolder $relativeName)).Hash
+    if ($actualHash -ne $expectedHash) { throw "Hash mismatch: $relativeName" }
+}
+```
+
+## License and Notices
+
+Bundled third-party dependency, font and installer notices are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt), with corresponding source material under [third-party](third-party/). A separate project source license has not yet been specified in this repository.
