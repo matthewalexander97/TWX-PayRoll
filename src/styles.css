@@ -528,14 +528,6 @@ h1 {
   color: var(--muted);
   margin: 0;
 }
-.offline-badge {
-  white-space: nowrap;
-  font-size: 11px;
-  color: var(--accent);
-  border: 1px solid var(--line);
-  padding: 8px 11px;
-  border-radius: 20px;
-}
 .notice,
 .error {
   font-size: 12px;
@@ -723,9 +715,6 @@ footer {
   .page-heading {
     align-items: flex-start;
   }
-  .offline-badge {
-    display: none;
-  }
   .foundation-grid {
     gap: 14px;
   }
@@ -882,35 +871,294 @@ footer {
 
 .manual-layout {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
   align-items: start;
 }
 .manual-index {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 22px 14px 14px;
+  margin: 0;
+  scrollbar-width: thin;
+}
+.manual-index-heading {
+  padding: 0 10px 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+.manual-index-heading h2 {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.manual-index-heading > p:last-child {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.manual-topics {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.manual-topics a {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
   gap: 12px;
+  min-height: 44px;
+  padding: 11px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-decoration: none;
+}
+.manual-topics a:hover,
+.manual-topics a:focus-visible {
+  background: var(--active);
+  color: var(--accent);
+}
+.manual-topic-number {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
 .manual-content {
   min-width: 0;
   display: grid;
-  gap: 20px;
+  gap: 24px;
 }
-.manual-content p {
-  line-height: 1.75;
-  max-width: 72ch;
+.manual-section {
+  padding: 30px 32px 24px;
+  margin: 0;
+}
+.manual-section-heading {
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+.manual-prose {
+  display: grid;
+  gap: 18px;
+}
+.manual-prose p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.85;
+  max-width: 68ch;
   overflow-wrap: anywhere;
 }
-.manual-layout a {
-  color: var(--text);
+.manual-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
 }
 .manual-content h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
   scroll-margin-top: 24px;
 }
 @media (max-width: 1050px) {
   .manual-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .manual-index {
+    position: static;
+    max-height: none;
+  }
+  .manual-topics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .manual-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .manual-section {
+    padding: 22px 20px 16px;
+  }
+  .manual-layout,
+  .manual-content {
+    gap: 18px;
+  }
+}
+/* Consistent settings rhythm and compact-window navigation. */
+body {
+  line-height: 1.5;
+}
+.sidebar {
+  overflow-y: auto;
+}
+.sidebar .brand {
+  margin-bottom: 28px;
+}
+.panel {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 3%);
+}
+.form-help {
+  line-height: 1.7;
+}
+.settings-layout {
+  display: grid;
+  gap: 24px;
+}
+.settings-layout > .panel {
+  margin: 0;
+}
+.settings-layout .panel-heading {
+  padding-bottom: 20px;
+}
+.settings-layout .panel-heading h2 {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.settings-layout .panel-heading p {
+  max-width: 72ch;
+  font-size: 13px;
+}
+.settings-body {
+  padding: 0 25px 25px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.settings-body > * + * {
+  margin-top: 20px;
+}
+.settings-body .storage-details {
+  padding: 0;
+  margin: 0;
+  gap: 12px 24px;
+}
+.settings-body h3 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.settings-body .backup-actions {
+  gap: 10px;
+  margin-bottom: 0;
+}
+.settings-body .backup-actions button {
+  font-size: 12px;
+  font-weight: 600;
+}
+.settings-inset {
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.settings-inset .backup-checkbox {
+  font-weight: 600;
+}
+.settings-inset .backup-help {
+  list-style: disc;
+  padding-left: 22px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  max-width: 80ch;
+}
+.backup-help li + li {
+  margin-top: 8px;
+}
+.integration-setup {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.integration-setup summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 28px;
+}
+.integration-setup ol {
+  list-style: decimal;
+  padding-left: 22px;
+  margin-top: 12px;
+  color: var(--muted);
+}
+.integration-setup li + li {
+  margin-top: 8px;
+}
+.integration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.integration-grid .integration-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.integration-setting .connection-account {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.integration-setting .backup-actions {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.settings-body > .form-help {
+  font-size: 12px;
+  max-width: 85ch;
+}
+.backup-history {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 12px;
+}
+.backup-history li:last-child {
+  border-bottom: 0;
+}
+.backup-history strong {
+  text-transform: capitalize;
+}
+.restore-confirmation {
+  border-radius: 10px;
+}
+.restore-confirmation > * + * {
+  margin-top: 12px;
+}
+@media (max-width: 1000px) {
+  .integration-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 720px) {
+  .settings-body {
+    padding: 0 16px 20px;
+  }
+  .settings-body .storage-details {
+    gap: 6px;
+  }
+  .settings-inset,
+  .integration-grid .integration-setting {
+    padding: 14px;
+  }
+  .settings-layout {
+    gap: 18px;
   }
 }

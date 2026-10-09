@@ -18,7 +18,7 @@ In Drivers, choose Driver Types and create the payout percentages you actually u
 
 Create Owners, then Trucks with an owner. An owner can have several trucks. A truck's optional default driver is an entry convenience, not a permanent assignment.
 
-Settings manages TWX Codes, Plants, Jobs and Adjustment Types. Enter your own approved codes and labels. A Job may belong to a Plant. An adjustment type supplies a suggested direction and optional code. Example buttons do not create production records automatically.
+Reference Records, directly below Reports in the navigation, manages TWX Codes, Plants, Jobs and Adjustment Types. Enter your own approved codes and labels. A Job may belong to a Plant. An adjustment type supplies a suggested direction and optional code. Example buttons do not create production records automatically.
 
 Archive a reference you no longer use instead of trying to erase historical records. Existing statements retain saved names, truck numbers and code labels when you rename a reference.
 

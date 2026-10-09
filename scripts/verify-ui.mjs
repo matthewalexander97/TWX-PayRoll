@@ -28,6 +28,7 @@ try {
       "Owners",
       "Trucks",
       "Reports",
+      "Reference Records",
       "User Manual",
       "TWX Payroll",
     ]) {

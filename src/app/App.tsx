@@ -154,13 +154,14 @@ export function App() {
               <h1>{area}</h1>
               <p className="subtitle">
                 {area === "Settings"
-                  ? "Make this workspace feel like yours."
-                  : "Manage pay periods, saved records and operations."}
+                  ? "Appearance, local storage and workspace protection."
+                  : area === "Reference Records"
+                    ? "Manage TWX codes, plants, jobs and adjustment types."
+                    : area === "User Manual"
+                      ? "A practical guide to setup, payroll, reports and recovery."
+                      : "Manage pay periods, saved records and operations."}
               </p>
             </div>
-            <span className="offline-badge">
-              <span className="status-dot" /> Offline first
-            </span>
           </div>
           {!desktop.available() && (
             <div className="notice">
@@ -202,13 +203,6 @@ export function App() {
                   setDataEpoch((v) => v + 1);
                 }}
               />
-              {info && (
-                <ReferenceManager
-                  refs={references}
-                  kinds={["twx_codes", "plants", "jobs", "adjustment_types"]}
-                  onChanged={refreshReferences}
-                />
-              )}
             </>
           ) : area === "TWX Payroll" ? (
             <Payroll
@@ -224,7 +218,10 @@ export function App() {
               enabled={info !== null}
               onChanged={businessChanged}
             />
-          ) : area === "Drivers" || area === "Owners" || area === "Trucks" ? (
+          ) : area === "Drivers" ||
+            area === "Owners" ||
+            area === "Trucks" ||
+            area === "Reference Records" ? (
             info ? (
               <ReferenceManager
                 key={area}
@@ -234,12 +231,14 @@ export function App() {
                     ? ["drivers", "driver_types"]
                     : area === "Owners"
                       ? ["owners"]
-                      : ["trucks"]
+                      : area === "Trucks"
+                        ? ["trucks"]
+                        : ["twx_codes", "plants", "jobs", "adjustment_types"]
                 }
                 onChanged={refreshReferences}
               />
             ) : (
-              <div className="panel">
+              <div className="panel business-panel">
                 <p>
                   Reference editing is available in the desktop application
                   after storage opens.

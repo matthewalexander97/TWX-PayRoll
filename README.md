@@ -36,7 +36,7 @@ The installer includes the Evergreen offline WebView2 installer and is configure
 6. Create **Drivers** and select their types.
 7. Create **Owners**.
 8. Create **Trucks** with their owners and optional default drivers.
-9. Add **TWX Codes**, **Plants**, **Jobs** and **Adjustment Types** in Settings as needed.
+9. Add **TWX Codes**, **Plants**, **Jobs** and **Adjustment Types** in **Reference Records** (below Reports) as needed.
 10. Start a settlement in **Weekly Settlements / Loads**.
 
 Open the built-in **User Manual** for detailed instructions. It works offline; the same content is available in the [User Guide](USER_GUIDE.md).

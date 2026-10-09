@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
@@ -75,6 +76,32 @@ async function settings() {
   fireEvent.click(await screen.findByRole("button", { name: "Settings" }));
 }
 describe("desktop foundation", () => {
+  it("places reference records below Reports and keeps integrations last in Settings", async () => {
+    await settings();
+    const nav = screen.getByRole("navigation");
+    const labels = within(nav)
+      .getAllByRole("button")
+      .map((button) => button.textContent);
+    expect(
+      labels.findIndex((label) => label?.includes("Reference Records")),
+    ).toBe(labels.findIndex((label) => label?.includes("Reports")) + 1);
+    expect(
+      screen.queryByRole("heading", { name: "Reference records" }),
+    ).toBeNull();
+    const headings = screen.getAllByRole("heading", { level: 2 });
+    expect(headings.at(-1)?.textContent).toBe("Optional integrations");
+    fireEvent.click(screen.getByRole("button", { name: "Reference Records" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Reference records",
+      }),
+    ).toBeTruthy();
+    for (const name of ["TWX Codes", "Plants", "Jobs", "Adjustment Types"])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
+    expect(
+      screen.queryByRole("heading", { name: "Optional integrations" }),
+    ).toBeNull();
+  });
   it("restores a stored preference and exposes all placeholder areas", async () => {
     await settings();
     expect(document.documentElement.dataset.theme).toBe("dark");

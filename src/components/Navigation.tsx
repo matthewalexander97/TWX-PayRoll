@@ -5,6 +5,7 @@ export const areas = [
   ["Owners", "Directory"],
   ["Trucks", "Directory"],
   ["Reports", "Reports"],
+  ["Reference Records", "Directory"],
   ["Settings", "Preferences"],
   ["User Manual", "Help"],
 ] as const;
@@ -43,7 +44,7 @@ export function Navigation({
             }}
           >
             <span className="nav-symbol" aria-hidden="true">
-              {["▤", "▦", "◉", "◇", "▱", "▥", "⚙", "?"][index]}
+              {["▤", "▦", "◉", "◇", "▱", "▥", "▧", "⚙", "?"][index]}
             </span>
             {label}
           </button>

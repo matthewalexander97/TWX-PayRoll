@@ -18,7 +18,7 @@ export function Settings({
   onRestored: () => Promise<void>;
 }) {
   return (
-    <>
+    <div className="settings-layout">
       <section className="panel">
         <div className="panel-heading">
           <h2>Appearance</h2>
@@ -78,6 +78,6 @@ export function Settings({
       <ExportSettings enabled={info !== null} />
       <BackupPanel enabled={info !== null} onRestored={onRestored} />
       <IntegrationSettings enabled={info !== null} />
-    </>
+    </div>
   );
 }

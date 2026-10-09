@@ -53,48 +53,50 @@ export function ExportSettings({ enabled }: { enabled: boolean }) {
           backups; backup protection has its own destination below.
         </p>
       </div>
-      <dl className="storage-details">
-        <dt>Default Export Folder</dt>
-        <dd className="data-path">
-          {preference?.directory ??
-            (enabled
-              ? "Choose a folder if Documents is unavailable."
-              : "Available in the desktop application")}
-        </dd>
-        <dt>Source</dt>
-        <dd>
-          {preference
-            ? preference.usesDocuments
-              ? "Windows Documents"
-              : "Your selected folder"
-            : "Not loaded"}
-        </dd>
-      </dl>
-      <div className="backup-actions">
-        {(
-          [
-            ["select", "Change Folder"],
-            ["reset", "Reset to Documents"],
-            ["open", "Open Export Folder"],
-          ] as const
-        ).map(([action, label]) => (
-          <button
-            key={action}
-            disabled={!enabled || busy}
-            onClick={() => {
-              void run(action);
-            }}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="settings-body">
+        <dl className="storage-details">
+          <dt>Default Export Folder</dt>
+          <dd className="data-path">
+            {preference?.directory ??
+              (enabled
+                ? "Choose a folder if Documents is unavailable."
+                : "Available in the desktop application")}
+          </dd>
+          <dt>Source</dt>
+          <dd>
+            {preference
+              ? preference.usesDocuments
+                ? "Windows Documents"
+                : "Your selected folder"
+              : "Not loaded"}
+          </dd>
+        </dl>
+        <div className="backup-actions">
+          {(
+            [
+              ["select", "Change Folder"],
+              ["reset", "Reset to Documents"],
+              ["open", "Open Export Folder"],
+            ] as const
+          ).map(([action, label]) => (
+            <button
+              key={action}
+              disabled={!enabled || busy}
+              onClick={() => {
+                void run(action);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        {message && <p role="status">{message}</p>}
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {message && <p role="status">{message}</p>}
     </section>
   );
 }
